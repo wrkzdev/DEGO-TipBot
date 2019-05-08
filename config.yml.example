@@ -1,0 +1,46 @@
+# MySQL connection information
+mysql:
+  host: "localhost"
+  port: 3306
+  user: "discordtip"
+  password: "YourSQLpassword"
+  db: "discordtip"
+discord:
+  token: "Bot.Token.Here"
+coin:
+  DonateAddress: "dg4nUdJyHV1ZCrYV7kHvTE9HkKT9ynKCW1Antm1ku8ihhsN1PkiH2fFfwsGt2y7UsN3rALr4gg8oz87vpxjaVF8g1uUWKH7pE"
+  prefix: 8411
+  decimal: 100
+  name: "DEGO"
+  prefixChar: "dg"
+  decimal: 100
+  AddrLen: 97
+  IntAddrLen: 185
+  DiffTarget: 20
+  MinToOptimize: 1000
+  IntervalOptimize: 600
+# wallet-api connection information
+# wallet-service connection information
+wallet:
+  host: "127.0.0.1"
+  port: "1111"
+  mixin: 0
+# daemon rpc connection information
+daemon:
+  host: "127.0.0.1"
+  port: 6969
+# DEGO is 2-digit, 100, max 100000000000
+tx_fee: 50
+min_tx_amount: 1000
+max_tx_amount: 100000000000
+# How many seconds between balance refresh with wallet service
+wallet_balance_update_interval: 120
+# Flood tip limit per 10 seconds
+floodTip: 8
+floodTipDuration: 10
+# Number of retry TX before issue it is fail
+TxRetry: 3
+## maintenance
+maintenance: 0
+maintenance_msg: "Bot under maintance."
+
