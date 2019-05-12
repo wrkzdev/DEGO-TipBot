@@ -21,21 +21,20 @@ def openConnection():
         elif (not conn.open):
             conn = pymysql.connect(config.mysql.host, user=config.mysql.user, passwd=config.mysql.password, db=config.mysql.db, connect_timeout=5)
     except:
-        print("ERROR: Unexpected error: Could not connect to MySql dego_bingogame instance.")
+        print("ERROR: Unexpected error: Could not connect to MySql instance.")
         sys.exit()
+
 
 def sql_update_balances():
     print('SQL: Updating all wallet balances')
     balances = wallet.get_all_balances_all()
-    updateTime = int(time.time())
     try:
         openConnection()
         with conn.cursor() as cur:
             for details in balances:
-                #print(details)
                 sql = """ INSERT INTO dego_walletapi (`balance_wallet_address`, `actual_balance`, `locked_balance`, `lastUpdate`) 
                           VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s """
-                cur.execute(sql, (details['address'], details['unlocked'], details['locked'], updateTime, details['unlocked'], details['locked'], updateTime,))
+                cur.execute(sql, (details['address'], details['unlocked'], details['locked'], int(time.time()), details['unlocked'], details['locked'], int(time.time()),))
                 conn.commit()
     except Exception as e:
         print(e)
@@ -45,20 +44,19 @@ def sql_update_balances():
 def sql_update_some_balances(wallet_addresses: List[str]):
     print('SQL: Updating some wallet balances')
     balances = wallet.get_some_balances(wallet_addresses)
-    updateTime = int(time.time())
     try:
         openConnection()
         with conn.cursor() as cur:
             for details in balances:
-                #print(details)
                 sql = """ INSERT INTO dego_walletapi (`balance_wallet_address`, `actual_balance`, `locked_balance`, `lastUpdate`) 
                           VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s """
-                cur.execute(sql, (details['address'], details['unlocked'], details['locked'], updateTime, details['unlocked'], details['locked'], updateTime,))
+                cur.execute(sql, (details['address'], details['unlocked'], details['locked'], int(time.time()), details['unlocked'], details['locked'], int(time.time()),))
                 conn.commit()
     except Exception as e:
         print(e)
     finally:
         conn.close()
+
 
 def sql_register_user(userID):
     try:
@@ -67,14 +65,12 @@ def sql_register_user(userID):
             sql = """ SELECT user_id, balance_wallet_address, user_wallet_address FROM dego_user WHERE `user_id`=%s LIMIT 1 """
             cur.execute(sql, (userID))
             result = cur.fetchone()
-            if (result is None):
-                ##
+            if result is None:
                 balance_address = wallet.register()
                 if (balance_address is None):
                    print('Internal error during call register wallet-api')
                    return
                 else:
-                   ##
                    walletStatus = daemonrpc_client.getWalletStatus()
                    if (walletStatus is None):
                        print('Can not reach wallet-api during sql_register_user')
@@ -88,21 +84,19 @@ def sql_register_user(userID):
                    result2 = {}
                    result2['balance_wallet_address'] = balance_address
                    result2['user_wallet_address'] = ''
-                   ## TODO need to save wallet.
-                   #wallet.save_walletapi()
                    return result2
             else:
-                ##
                 result2 = {}
                 result2['user_id'] = result[0]
                 result2['balance_wallet_address'] = result[1]
-                if (2 in result):
+                if 2 in result:
                     result2['user_wallet_address'] = result[2]
                 return result2
     except Exception as e:
         print(e)
     finally:
         conn.close()
+
 
 def sql_update_user(userID, user_wallet_address):
     try:
@@ -111,7 +105,7 @@ def sql_update_user(userID, user_wallet_address):
             sql = """ SELECT user_id, user_wallet_address, balance_wallet_address FROM dego_user WHERE `user_id`=%s LIMIT 1 """
             cur.execute(sql, (userID))
             result = cur.fetchone()
-            if (result is None):
+            if result is None:
                 balance_address = wallet.register()
                 if (balance_address is None):
                    print('Internal error during call register wallet-api')
@@ -123,12 +117,12 @@ def sql_update_user(userID, user_wallet_address):
                 result2 = {}
                 result2['balance_wallet_address'] = result[2]
                 result2['user_wallet_address'] = user_wallet_address
-                print('.register...'+result2)
-                return result2 ## return userwallet
+                return result2
     except Exception as e:
         print(e)
     finally:
         conn.close()
+
 
 def sql_get_userwallet(userID):
     try:
@@ -141,22 +135,21 @@ def sql_get_userwallet(userID):
             if (result is None):
                 return None
             else:
-                ##
                 userwallet = {}
                 userwallet['balance_wallet_address'] = result[1]
-                if(result[2] is not None):
+                if result[2]:
                     userwallet['user_wallet_address'] = result[2]
-                if(result[3] is not None):
+                if result[3]:
                     userwallet['balance_wallet_address_ts'] = result[3]
-                if(result[4] is not None):
+                if result[4]:
                     userwallet['balance_wallet_address_ch'] = result[4]
-                if(result[5] is not None):
+                if result[5]:
                     userwallet['lastOptimize'] = result[5]
                 sql = """ SELECT balance_wallet_address, actual_balance, locked_balance, lastUpdate FROM dego_walletapi 
                           WHERE `balance_wallet_address`=%s LIMIT 1 """
                 cur.execute(sql, (userwallet['balance_wallet_address'],))
                 result2 = cur.fetchone()
-                if (result2 is not None):
+                if result2:
                     userwallet['actual_balance'] = int(result2[1])
                     userwallet['locked_balance'] = int(result2[2])
                     userwallet['lastUpdate'] = int(result2[3])
@@ -168,6 +161,7 @@ def sql_get_userwallet(userID):
         print(e)
     finally:
         conn.close()
+
 
 def sql_get_countLastTip(userID, lastDuration: int):
     lapDuration = int(time.time()) - lastDuration
@@ -186,7 +180,7 @@ def sql_get_countLastTip(userID, lastDuration: int):
                       ORDER BY `date` DESC LIMIT 10 """
             cur.execute(sql, (str(userID), lapDuration, str(userID), lapDuration, str(userID), lapDuration, str(userID), lapDuration, str(userID), lapDuration,))
             result = cur.fetchall()
-            if (result is None):
+            if result is None:
                 return 0
             else:
                 return len(result)
@@ -195,14 +189,15 @@ def sql_get_countLastTip(userID, lastDuration: int):
     finally:
         conn.close()
 
+
 def sql_send_tip(user_from: str, user_to: str, amount: int):
     user_from_wallet = sql_get_userwallet(user_from)
     user_to_wallet = sql_get_userwallet(user_to)
+    tx_hash = None
     if all(v is not None for v in [user_from_wallet['balance_wallet_address'], user_to_wallet['balance_wallet_address']]):
         tx_hash = wallet.send_transaction(user_from_wallet['balance_wallet_address'],
                       user_to_wallet['balance_wallet_address'], amount)
-        if (tx_hash is not None):
-            ## add to MySQL
+        if tx_hash:
             updateTime = int(time.time())
             try:
                 openConnection()
@@ -212,12 +207,12 @@ def sql_send_tip(user_from: str, user_to: str, amount: int):
                    cur.execute(sql, (user_from, user_to, amount, timestamp, tx_hash,))
                    conn.commit()
                    updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   if (updateBalance):
+                   if updateBalance:
                        sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
                        cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_from_wallet['balance_wallet_address'],))
                        conn.commit()
                    updateBalance = wallet.get_balance_address(user_to_wallet['balance_wallet_address'])
-                   if (updateBalance):
+                   if updateBalance:
                        sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
                        cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_to_wallet['balance_wallet_address'],))
                        conn.commit()
@@ -229,12 +224,13 @@ def sql_send_tip(user_from: str, user_to: str, amount: int):
     else:
         return None
 
+
 def sql_send_tipall(user_from: str, user_tos, amount: int):
     user_from_wallet = sql_get_userwallet(user_from)
-    if ('balance_wallet_address' in user_from_wallet):
+    tx_hash = None
+    if 'balance_wallet_address' in user_from_wallet:
         tx_hash = wallet.send_transactionall(user_from_wallet['balance_wallet_address'], user_tos)
-        if (tx_hash is not None):
-            ## add to MySQL
+        if tx_hash:
             try:
                 openConnection()
                 with conn.cursor() as cur:
@@ -250,13 +246,13 @@ def sql_send_tipall(user_from: str, user_tos, amount: int):
     else:
         return None
 
+
 def sql_send_tip_Ex(user_from: str, address_to: str, amount: int):
     user_from_wallet = sql_get_userwallet(user_from)
-    if ('balance_wallet_address' in user_from_wallet):
+    tx_hash = None
+    if 'balance_wallet_address' in user_from_wallet:
         tx_hash = wallet.send_transaction(user_from_wallet['balance_wallet_address'], address_to, amount)
-        if (tx_hash is not None):
-            ## add to MySQL
-            updateTime = int(time.time())
+        if tx_hash:
             try:
                 openConnection()
                 with conn.cursor() as cur:
@@ -267,7 +263,7 @@ def sql_send_tip_Ex(user_from: str, address_to: str, amount: int):
                    updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
                    if (updateBalance):
                        sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_from_wallet['balance_wallet_address'],))
+                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], int(time.time()), user_from_wallet['balance_wallet_address'],))
                        conn.commit()
             except Exception as e:
                 print(e)
@@ -277,12 +273,13 @@ def sql_send_tip_Ex(user_from: str, address_to: str, amount: int):
     else:
         return None
 
+
 def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, paymentid):
     user_from_wallet = sql_get_userwallet(user_from)
-    if ('balance_wallet_address' in user_from_wallet):
+    tx_hash = None
+    if 'balance_wallet_address' in user_from_wallet:
         tx_hash = wallet.send_transaction_id(user_from_wallet['balance_wallet_address'], address_to, amount, paymentid)
-        if (tx_hash is not None):
-            ## add to MySQL
+        if tx_hash:
             updateTime = int(time.time())
             try:
                 openConnection()
@@ -292,7 +289,7 @@ def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, paymentid):
                    cur.execute(sql, (user_from, address_to, amount, timestamp, tx_hash, paymentid, ))
                    conn.commit()
                    updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   if (updateBalance):
+                   if updateBalance:
                        sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
                        cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_from_wallet['balance_wallet_address'],))
                        conn.commit()
@@ -304,13 +301,13 @@ def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, paymentid):
     else:
         return None
 
+
 def sql_withdraw(user_from: str, amount: int):
     user_from_wallet = sql_get_userwallet(user_from)
+    tx_hash = None
     if all(v is not None for v in [user_from_wallet['balance_wallet_address'], user_from_wallet['user_wallet_address']]):
         tx_hash = wallet.send_transaction(user_from_wallet['balance_wallet_address'], user_from_wallet['user_wallet_address'], amount)
-        if (tx_hash is not None):
-            ## add to MySQL
-            updateTime = int(time.time())
+        if tx_hash:
             try:
                 openConnection()
                 with conn.cursor() as cur:
@@ -319,9 +316,9 @@ def sql_withdraw(user_from: str, amount: int):
                    cur.execute(sql, (user_from, user_from_wallet['user_wallet_address'], amount, timestamp, tx_hash,))
                    conn.commit()
                    updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   if (updateBalance):
+                   if updateBalance:
                        sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_from_wallet['balance_wallet_address'],))
+                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], int(time.time()), user_from_wallet['balance_wallet_address'],))
                        conn.commit()
             except Exception as e:
                 print(e)
@@ -331,13 +328,13 @@ def sql_withdraw(user_from: str, amount: int):
     else:
         return None
 
+
 def sql_donate(user_from: str, address_to: str, amount: int) -> str:
     user_from_wallet = sql_get_userwallet(user_from)
+    tx_hash = None
     if all(v is not None for v in [user_from_wallet['balance_wallet_address'], address_to]):
         tx_hash = wallet.send_transaction(user_from_wallet['balance_wallet_address'], address_to, amount)
-        if (tx_hash is not None):
-            ## add to MySQL
-            updateTime = int(time.time())
+        if tx_hash:
             try:
                 openConnection()
                 with conn.cursor() as cur:
@@ -349,40 +346,38 @@ def sql_donate(user_from: str, address_to: str, amount: int) -> str:
                    print(updateBalance)
                    if (updateBalance):
                        sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_from_wallet['balance_wallet_address'],))
+                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], int(time.time()), user_from_wallet['balance_wallet_address'],))
                        conn.commit()
             except Exception as e:
                 print(e)
             finally:
                 conn.close()
-        #print(tx_hash)
         return tx_hash
     else:
         return None
 
+
 def sql_optimize_check():
-    ## need to return string of message
     try:
         openConnection()
         with conn.cursor() as cur:
-            timeNow=int(time.time())-int(config.coin.IntervalOptimize)
-            sql = """ SELECT COUNT(*) FROM dego_user WHERE lastOptimize>%s """
+            timeNow = int(time.time()) - int(config.coin.IntervalOptimize)
+            sql = """ SELECT COUNT(*) FROM dego_user WHERE lastOptimize > %s """
             cur.execute(sql, timeNow, )
             result = cur.fetchone()
-            #print(result)
             return result[0]
     except Exception as e:
         print(e)
     finally:
         conn.close()
 
+
 def sql_optimize_do(userID: str):
     user_from_wallet = sql_get_userwallet(userID)
-    print('store.sql_optimize_do')
-    if (user_from_wallet):
+    print('store.sql_optimize_do..')
+    if user_from_wallet:
         OptimizeCount = wallet.wallet_optimize_single(user_from_wallet['balance_wallet_address'], user_from_wallet['actual_balance'])
         if OptimizeCount > 0:
-            updateTime = int(time.time())
             sql_optimize_update(str(userID))
             try:
                 openConnection()
@@ -390,13 +385,14 @@ def sql_optimize_do(userID: str):
                    updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
                    if (updateBalance):
                        sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_from_wallet['balance_wallet_address'],))
+                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], int(time.time()), user_from_wallet['balance_wallet_address'],))
                        conn.commit()
             except Exception as e:
                 print(e)
             finally:
                 conn.close()
         return OptimizeCount
+
 
 def sql_optimize_update(userID: str):
     try:
@@ -416,7 +412,7 @@ def sql_tag_by_server(server_id: str, tag_id: str=None):
     try:
         openConnection()
         with conn.cursor() as cur:
-            if (tag_id is None): 
+            if tag_id is None: 
                 sql = """ SELECT tag_id, tag_desc, date_added, tag_serverid, added_byname, added_byuid, num_trigger FROM dego_tag WHERE tag_serverid = %s """
                 cur.execute(sql, (server_id,))
                 result = cur.fetchall()
@@ -428,7 +424,7 @@ def sql_tag_by_server(server_id: str, tag_id: str=None):
                 sql = """ SELECT `tag_id`, `tag_desc`, `date_added`, `tag_serverid`, `added_byname`, `added_byuid`, `num_trigger` FROM dego_tag WHERE tag_serverid = %s AND tag_id=%s """
                 cur.execute(sql, (server_id, tag_id,))
                 result = cur.fetchone()
-                if (result is not None):
+                if result:
                     tag = {}
                     tag['tag_id'] = result[0]
                     tag['tag_desc'] = result[1]
@@ -454,14 +450,14 @@ def sql_tag_by_server_add(server_id: str, tag_id: str, tag_desc: str, added_byna
             sql = """ SELECT COUNT(tag_serverid) FROM dego_tag WHERE tag_serverid=%s """
             cur.execute(sql, (server_id,))
             counting = cur.fetchone()
-            if (counting is not None):
-                if (counting[0]>20):
+            if counting:
+                if counting[0] > 20:
                     return None
             sql = """ SELECT `tag_id`, `tag_desc`, `date_added`, `tag_serverid`, `added_byname`, `added_byuid`, `num_trigger` 
                       FROM dego_tag WHERE tag_serverid = %s AND tag_id=%s """
             cur.execute(sql, (server_id, tag_id.upper(),))
             result = cur.fetchone()
-            if (result is None):
+            if result is None:
                 sql = """ INSERT INTO dego_tag (`tag_id`, `tag_desc`, `date_added`, `tag_serverid`, `added_byname`, `added_byuid`) 
                           VALUES (%s, %s, %s, %s, %s, %s) """
                 cur.execute(sql, (tag_id.upper(), tag_desc, int(time.time()), server_id, added_byname, added_byuid,))
@@ -483,7 +479,7 @@ def sql_tag_by_server_del(server_id: str, tag_id: str):
                       FROM dego_tag WHERE tag_serverid = %s AND tag_id=%s """
             cur.execute(sql, (server_id, tag_id.upper(),))
             result = cur.fetchone()
-            if (result is None):
+            if result is None:
                 return None
             else:
                 sql = """ DELETE FROM dego_tag WHERE `tag_id`=%s AND `tag_serverid`=%s """
