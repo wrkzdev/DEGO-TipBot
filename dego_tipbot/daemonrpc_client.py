@@ -21,7 +21,7 @@ def call_method(method_name: str, payload: Dict = None) -> Dict:
     }
     resp = requests.post(
         f'http://{config.daemon.host}:{config.daemon.port}/json_rpc',
-        json=full_payload)
+        json=full_payload, timeout=3.0)
     resp.raise_for_status()
     json_resp = resp.json()
     if 'error' in json_resp:
@@ -33,7 +33,7 @@ def gettopblock():
     result = call_method('getblockcount')
     #print(result)
     data = '{"jsonrpc":"2.0","method":"getblockheaderbyheight","params":{"height":'+str(result['count'] - 1)+'}}'
-    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data)
+    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data, timeout=3.0)
     json_resp = response.json()
     if 'error' in json_resp:
         raise RPCException(json_resp['error'])
@@ -54,7 +54,7 @@ def hhashes(num) -> str:
 
 def getblock(blockH: str=None):
     data = '{"jsonrpc":"2.0","method":"getblockheaderbyheight","params":{"height":'+str(blockH)+'}}'
-    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data)
+    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data, timeout=3.0)
     json_resp = response.json()
     if 'error' in json_resp:
         raise RPCException(json_resp['error'])
@@ -67,7 +67,7 @@ def getblock(blockH: str=None):
 
 def getblockbyHash(blockH: str=None):
     data = '{"jsonrpc":"2.0","method":"getblockheaderbyhash","params":{"hash":"'+str(blockH)+'"}}'
-    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data)
+    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data, timeout=3.0)
     json_resp = response.json()
     if 'error' in json_resp:
         raise RPCException(json_resp['error'])
