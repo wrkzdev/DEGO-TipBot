@@ -1456,7 +1456,10 @@ async def tag(ctx, *args):
                             'If you have permission to manage discord server.\n'
                             'Use: `.tag -add|-del tagname <Tag description ... >`')
             return
-    if args[0].lower() == '-add' and check_guild_permissions(ctx, {'manage_guild': True}):
+    if (args[0].lower() in ['-add', '-del']) and ctx.author.guild_permissions.manage_guild == False:
+        await ctx.send('Permission denied.')
+        return
+    if args[0].lower() == '-add' and ctx.author.guild_permissions.manage_guild:
         if (re.match('^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$', args[1])):
             tag=args[1].upper()
             if (len(tag)>=32):
@@ -1481,7 +1484,7 @@ async def tag(ctx, *args):
             await ctx.send(f'Tag {args[1]} is not valid.')
             return
         return
-    elif args[0].lower() == '-del' and check_guild_permissions(ctx, {'manage_guild': True}):
+    elif args[0].lower() == '-del' and ctx.author.guild_permissions.manage_guild:
         if (re.match('^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$', args[1])):
             tag=args[1].upper()
             delTag = store.sql_tag_by_server_del(str(ctx.message.guild.id), tag.strip())
@@ -1498,18 +1501,6 @@ async def tag(ctx, *args):
             await ctx.send(f'Tag {args[1]} is not valid.')
             return
         return
-
-
-async def check_guild_permissions(ctx, perms, *, check=all):
-    is_owner = await ctx.bot.is_owner(ctx.author)
-    if is_owner:
-        return True
-
-    if ctx.guild is None:
-        return False
-
-    resolved = ctx.author.guild_permissions
-    return check(getattr(resolved, name, None) == value for name, value in perms.items())
 
 
 def hhashes(num) -> str:
