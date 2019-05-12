@@ -44,14 +44,6 @@ def gettopblock():
     return response.json().get('result', {})
 
 
-def hhashes(num) -> str:
-    for x in ['H/s','KH/s','MH/s','GH/s']:
-        if num < 1000.0:
-            return "%3.1f%s" % (num, x)
-        num /= 1000.0
-    return "%3.1f%s" % (num, 'TH/s')
-
-
 def getblock(blockH: str=None):
     data = '{"jsonrpc":"2.0","method":"getblockheaderbyheight","params":{"height":'+str(blockH)+'}}'
     response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data, timeout=3.0)
@@ -82,10 +74,3 @@ def getWalletStatus():
     result = rpc_client.call_method('getStatus')
     return result
 
-
-def hhashes(num) -> str:
-    for x in ['H/s','KH/s','MH/s','GH/s']:
-        if num < 1000.0:
-            return "%3.1f%s" % (num, x)
-        num /= 1000.0
-    return "%3.1f%s" % (num, 'TH/s')
