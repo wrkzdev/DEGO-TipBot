@@ -1585,10 +1585,8 @@ async def on_command_error(error, ctx):
         #await ctx.message.author.send('I don\'t know that command: try `.help`')
 
 async def update_balance_wallets():
-    await bot.wait_until_ready()
     walletStatus = daemonrpc_client.getWalletStatus()
     while True:
-        # do not update yet
         await asyncio.sleep(30)
         store.sql_update_balances()
         await asyncio.sleep(config.wallet_balance_update_interval)
