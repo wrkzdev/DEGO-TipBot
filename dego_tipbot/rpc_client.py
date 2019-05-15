@@ -21,7 +21,7 @@ def call_method(method_name: str, payload: Dict = None) -> Dict:
     }
     resp = requests.post(
         f'http://{config.wallet.host}:{config.wallet.port}/json_rpc',
-        json=full_payload, timeout=10.0)
+        json=full_payload, timeout=15.0)
     resp.raise_for_status()
     json_resp = resp.json()
     if 'error' in json_resp:

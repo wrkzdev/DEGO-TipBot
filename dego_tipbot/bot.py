@@ -2016,7 +2016,7 @@ def truncate(number, digits) -> float:
 
 @click.command()
 def main():
-    bot.loop.create_task(update_balance_wallets())
+    #bot.loop.create_task(update_balance_wallets())
     bot.run(config.discord.token, reconnect=True)
 
 
