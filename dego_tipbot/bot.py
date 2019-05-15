@@ -1070,6 +1070,41 @@ async def send(ctx, amount: str, CoinAddress: str):
             iCoinAddress=CoinAddress
             CoinAddress=valid_address['address']
             paymentid=valid_address['integrated_id']
+    elif len(CoinAddress) == int(config.coin.AddrLen) + 64 + 1:
+        valid_address = {}
+        check_address = CoinAddress.split(".")
+        if len(check_address) != 2:
+            await ctx.message.add_reaction(EMOJI_ERROR)
+            await ctx.send(f'Invalid {COIN_NAME} address + paymentid')
+            return
+        else:
+            valid_address_str = addressvalidation.validate_address(check_address[0])
+            paymentid = check_address[1].strip()
+            if valid_address_str is None:
+                await ctx.message.add_reaction(EMOJI_ERROR)
+                await ctx.message.author.send(
+                                       '🛑  Invalid address:\n'
+                                       f'`{check_address[0]}`')
+                return
+            else:
+                valid_address['address'] = valid_address_str
+            ## Check payment ID
+            if len(paymentid) == 64:
+                if not re.match(r'[a-zA-Z0-9]{64,}', paymentid.strip()):
+                    await ctx.message.add_reaction(EMOJI_ERROR)
+                    await ctx.send(f'🛑  PaymentID: `{paymentid}`\n'
+                                    'Should be in 64 correct format.')
+                    return
+                else:
+                    CoinAddress = valid_address['address']
+                    valid_address['paymentid'] = paymentid
+                    iCoinAddress = addressvalidation.make_integrated(valid_address['address'], paymentid)['integrated_address']
+                    pass
+            else:
+                await ctx.message.add_reaction(EMOJI_ERROR)
+                await ctx.send(f'🛑  PaymentID: `{paymentid}`\n'
+                                'Incorrect length')
+                return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
