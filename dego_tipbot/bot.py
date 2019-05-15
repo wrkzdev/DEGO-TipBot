@@ -33,6 +33,11 @@ COIN_DIGITS = config.coin.decimal
 COIN_REPR = config.coin.name
 BOT_INVITELINK = 'https://discordapp.com/oauth2/authorize?client_id=525612379187314688&scope=bot'
 
+MESSAGE_HISTORY_MAX = 20  # message history to store
+MESSAGE_HISTORY_TIME = 60  # duration max to put to DB
+MESSAGE_HISTORY_LIST = []
+MESSAGE_HISTORY_LAST = 0
+
 ## Get them from https://emojipedia.org
 EMOJI_MONEYBAG = "\U0001F4B0"
 EMOJI_SOS = "\U0001F198"
@@ -85,6 +90,22 @@ async def on_shard_ready(shard_id):
 
 @bot.event
 async def on_message(message):
+    global MESSAGE_HISTORY_LIST, MESSAGE_HISTORY_TIME, MESSAGE_HISTORY_MAX, MESSAGE_HISTORY_LAST
+    if len(MESSAGE_HISTORY_LIST) > 0:
+        if len(MESSAGE_HISTORY_LIST) > MESSAGE_HISTORY_MAX or time.time() - MESSAGE_HISTORY_LAST > MESSAGE_HISTORY_TIME:
+            # add to DB
+            numb_message = store.sql_add_messages(MESSAGE_HISTORY_LIST)
+            print('Added number of messages: ' + str(numb_message))
+            #print(MESSAGE_HISTORY_LIST)
+            MESSAGE_HISTORY_LIST = []
+            MESSAGE_HISTORY_LAST == 0
+            #print('reset number of message')
+    if isinstance(message.channel, discord.DMChannel) == False and message.author.bot == False and len(message.content) > 0 and message.author != bot.user:
+        MESSAGE_HISTORY_LIST.append((str(message.guild.id), message.guild.name, str(message.channel.id), message.channel.name, 
+            str(message.author.id), message.author.name, str(message.id), int(time.time())))
+        if MESSAGE_HISTORY_LAST == 0:
+            MESSAGE_HISTORY_LAST = int(time.time())
+
     if isinstance(message.channel, discord.DMChannel):
         pass
     else:

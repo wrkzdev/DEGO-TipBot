@@ -117,3 +117,18 @@ CREATE TABLE `dego_withdraw` (
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
+DROP TABLE IF EXISTS `discord_messages`;
+CREATE TABLE `discord_messages` (
+`serverid` varchar(32) CHARACTER SET ascii NOT NULL,
+`server_name` varchar(64) NOT NULL,
+`channel_id` varchar(32) CHARACTER SET ascii NOT NULL,
+`channel_name` varchar(64) NOT NULL,
+`user_id` varchar(32) CHARACTER SET ascii NOT NULL,
+`message_author` varchar(32) NOT NULL,
+`message_id` varchar(32) CHARACTER SET ascii NOT NULL,
+`message_time` int(11) NOT NULL,
+UNIQUE KEY `message_id` (`message_id`),
+KEY `message_time` (`message_time`),
+KEY `serverid` (`serverid`),
+KEY `channel_id` (`channel_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

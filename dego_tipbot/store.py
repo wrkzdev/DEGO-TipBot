@@ -492,6 +492,48 @@ def sql_tag_by_server_del(server_id: str, tag_id: str):
         conn.close()
 
 
+def sql_add_messages(list_messages):
+    if len(list_messages) == 0:
+        return 0
+    global conn
+    try:
+        openConnection()
+        with conn.cursor() as cur:
+            sql = """ INSERT IGNORE INTO `discord_messages` (`serverid`, `server_name`, `channel_id`, `channel_name`, `user_id`, 
+                      `message_author`, `message_id`, `message_time`)
+                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s) """
+            cur.executemany(sql, list_messages)
+            conn.commit()
+            return cur.rowcount
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
+
+
+def sql_get_messages(server_id: str, channel_id: str, time_int: int):
+    global conn
+    lapDuration = int(time.time()) - time_int
+    try:
+        openConnection()
+        with conn.cursor() as cur:
+            sql = """ SELECT DISTINCT `user_id` FROM discord_messages 
+                      WHERE `serverid` = %s AND `channel_id` = %s AND `message_time`>%s """
+            cur.execute(sql, (server_id, channel_id, lapDuration,))
+            result = cur.fetchall()
+            list_talker = []
+            if result:
+                for item in result:
+                    if int(item[0]) not in list_talker:
+                        list_talker.append(int(item[0]))
+            return list_talker
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
+    return None
+
+
 def sql_get_tipnotify():
     global conn
     try:
