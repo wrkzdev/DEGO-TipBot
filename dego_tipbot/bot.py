@@ -579,7 +579,7 @@ async def donate(ctx, amount: str):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await bot.reply('Thank you. Can not deliver TX right now. Try again soon.')
+        await ctx.send(f'{ctx.author.mention} Thank you. Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -796,7 +796,7 @@ async def tip(ctx, amount: str, *args):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await bot.reply('Can not deliver TX right now. Try again soon.')
+        await ctx.send(f'{ctx.author.mention} Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -971,7 +971,7 @@ async def tipall(ctx, amount: str):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await bot.reply('Can not deliver TX right now. Try again soon.')
+        await ctx.send(f'{ctx.author.mention} Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -1164,7 +1164,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await bot.reply('Can not deliver TX right now. Try again soon.')
+            await ctx.send(f'{ctx.author.mention} Can not deliver TX right now. Try again soon.')
             return
     else:
         print('Process normal address...')
@@ -1183,7 +1183,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await bot.reply('Can not deliver TX right now. Try again soon.')
+            await ctx.send(f'{ctx.author.mention} Can not deliver TX right now. Try again soon.')
             return
 
 
@@ -1798,7 +1798,7 @@ async def _tip(ctx, amount):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await bot.reply('Can not deliver TX right now. Try again soon.')
+        await ctx.send(f'{ctx.author.mention} Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -1942,7 +1942,7 @@ async def _tip_talker(ctx, amount, list_talker):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await bot.reply('Can not deliver TX right now. Try again soon.')
+        await ctx.send(f'{ctx.author.mention} Can not deliver TX right now. Try again soon.')
         return
 
 
