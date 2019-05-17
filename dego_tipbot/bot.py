@@ -112,43 +112,7 @@ async def on_message(message):
     else:
         if message.guild.id in IGNORE_TIP_SERVER:
             return
-    if message.author.bot and message.content.upper().startswith('.TIP '):
-        if isinstance(message.channel, discord.DMChannel):
-            await message.add_reaction(EMOJI_ERROR)
-            return
-        if len(message.mentions) == 0:
-            await message.add_reaction(EMOJI_ERROR)
-            return
-        elif len(message.mentions) >= 1:
-            args = message.content.split(" ")
-            amount = args[1].replace(",", "")
-            try:
-                amount = float(amount)
-            except ValueError:
-                await message.add_reaction(EMOJI_ERROR)
-                return
 
-            listMembers = message.mentions
-            memids = []
-            for member in listMembers:
-                if message.author.id != member.id:
-                    memids.append(str(member.id))
-            tipTx = bottip(message.author.id, memids, amount)
-            if tipTx:
-                await message.add_reaction(EMOJI_MONEYBAG)
-                for member in message.mentions:
-                    if member.bot == False:
-                        try:
-                            await member.send(f'💰 You got a tip of {amount:,.2f} '
-                                              f'{COIN_REPR} from `{message.author.name}` in server `{message.guild.name}`\n'
-                                              f'Transaction hash: `{tipTx}`')
-                        except Exception as e:
-                            print(e)
-                return
-            else:
-                await message.add_reaction(EMOJI_ERROR)
-                return
-        return
     # do some extra stuff here
     if int(message.author.id) in MAINTENANCE_OWNER:
         # It is better to set bot to MAINTENANCE mode before restart or stop
@@ -164,7 +128,8 @@ async def on_message(message):
                     await message.author.send('Maintenance OFF, `maintenance on` to turn it off.')
                     return
     # Do not remove this, otherwise, command not working.
-    await bot.process_commands(message)
+    ctx = await bot.get_context(message)
+    await bot.invoke(ctx)
 
 
 @bot.command(pass_context=True, name='info', aliases=['wallet', 'tipjar'], help=bot_help_info)
@@ -614,8 +579,7 @@ async def donate(ctx, amount: str):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        'Thank you. Can not deliver TX right now. Try again soon.')
+        await bot.reply('Thank you. Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -832,8 +796,7 @@ async def tip(ctx, amount: str, *args):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        'Can not deliver TX right now. Try again soon.')
+        await bot.reply('Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -1008,8 +971,7 @@ async def tipall(ctx, amount: str):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        'Can not deliver TX right now. Try again soon.')
+        await bot.reply('Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -1202,8 +1164,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.message.author.send(
-                            'Can not deliver TX right now. Try again soon.')
+            await bot.reply('Can not deliver TX right now. Try again soon.')
             return
     else:
         print('Process normal address...')
@@ -1222,8 +1183,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.message.author.send(
-                            'Can not deliver TX right now. Try again soon.')
+            await bot.reply('Can not deliver TX right now. Try again soon.')
             return
 
 
@@ -1695,62 +1655,6 @@ async def update_balance_wallets():
         await asyncio.sleep(config.wallet_balance_update_interval)
 
 
-def bottip(from_id: int, to_ids, amount: str):
-    user_from = store.sql_get_userwallet(from_id)
-    try:
-        real_amount = int(round(float(amount) * COIN_DIGITS))
-    except:
-        return None
-    if real_amount > config.max_tx_amount:
-        return None
-    elif real_amount < config.min_tx_amount:
-        return None
-
-    destinations = []
-    memids = [] # list of member ID
-    for id in to_ids:
-        user_to = store.sql_register_user(id)
-        memids.append(user_to['balance_wallet_address'])
-
-    addresses = []
-    for desti in memids:
-        destinations.append({"address":desti,"amount":real_amount})
-        addresses.append(desti)
-
-    ActualSpend = real_amount * len(memids) + config.tx_fee
-    if ActualSpend + config.tx_fee >= user_from['actual_balance']:
-        return None
-
-    if ActualSpend > config.max_tx_amount:
-        return None
-    elif real_amount < config.min_tx_amount:
-        return None
-
-    # Get wallet status
-    walletStatus = daemonrpc_client.getWalletStatus()
-    if (walletStatus is None):
-        return None
-    else:
-        print(walletStatus)
-        localDaemonBlockCount = int(walletStatus['blockCount'])
-        networkBlockCount = int(walletStatus['knownBlockCount'])
-        if (networkBlockCount - localDaemonBlockCount) >= 20:
-            return None
-        else:
-            pass
-    # End of wallet status
-    tip = None
-    try:
-        tip = store.sql_send_tipall(from_id, destinations, real_amount)
-    except Exception as e:
-        print(e)
-    if tip:
-        store.sql_update_some_balances(addresses)
-        return tip
-    else:
-        return None
-
-
 # Multiple tip
 async def _tip(ctx, amount):
     user_from = store.sql_get_userwallet(ctx.message.author.id)
@@ -1894,8 +1798,7 @@ async def _tip(ctx, amount):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        'Can not deliver TX right now. Try again soon.')
+        await bot.reply('Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -2039,8 +1942,7 @@ async def _tip_talker(ctx, amount, list_talker):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        'Can not deliver TX right now. Try again soon.')
+        await bot.reply('Can not deliver TX right now. Try again soon.')
         return
 
 
