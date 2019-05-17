@@ -11,27 +11,30 @@ CREATE TABLE `bot_tipnotify_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
 
-DROP TABLE IF EXISTS `dego_donate`;
-CREATE TABLE `dego_donate` (
-  `from_user` varchar(32) NOT NULL,
-  `to_address` varchar(128) NOT NULL,
-  `amount` bigint(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  KEY `from_user` (`from_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
+DROP TABLE IF EXISTS `dego_external_tx`;
+CREATE TABLE `dego_external_tx` (
+`user_id` varchar(32) NOT NULL,
+`amount` bigint(20) NOT NULL,
+`fee` int(11) NOT NULL,
+`to_address` varchar(128) NOT NULL,
+`paymentid` varchar(64) DEFAULT NULL,
+`type` enum('SEND','WITHDRAW') NOT NULL,
+`date` int(11) NOT NULL,
+`tx_hash` varchar(64) NOT NULL,
+KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=ascii
 
 
-DROP TABLE IF EXISTS `dego_send`;
-CREATE TABLE `dego_send` (
-  `from_user` varchar(32) NOT NULL,
-  `to_address` varchar(256) NOT NULL,
-  `amount` bigint(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  `paymentid` varchar(64) DEFAULT NULL,
-  KEY `from_user` (`from_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
+DROP TABLE IF EXISTS `dego_mv_tx`;
+CREATE TABLE `dego_mv_tx` (
+`from_userid` varchar(32) NOT NULL,
+`to_userid` varchar(32) NOT NULL,
+`amount` bigint(20) NOT NULL,
+`type` enum('TIP','TIPS','TIPALL','DONATE') NOT NULL,
+`date` int(11) NOT NULL,
+KEY `from_userid` (`from_userid`),
+KEY `to_userid` (`to_userid`)
+) ENGINE=InnoDB DEFAULT CHARSET=ascii
 
 
 DROP TABLE IF EXISTS `dego_server`;
@@ -60,28 +63,6 @@ CREATE TABLE `dego_tag` (
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
 
-DROP TABLE IF EXISTS `dego_tip`;
-CREATE TABLE `dego_tip` (
-  `from_user` varchar(32) NOT NULL,
-  `to_user` varchar(32) NOT NULL,
-  `amount` bigint(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  KEY `from_user` (`from_user`),
-  KEY `to_user` (`to_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
-
-
-DROP TABLE IF EXISTS `dego_tipall`;
-CREATE TABLE `dego_tipall` (
-  `from_user` varchar(32) NOT NULL,
-  `amount_total` bigint(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  KEY `from_user` (`from_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
-
-
 DROP TABLE IF EXISTS `dego_user`;
 CREATE TABLE `dego_user` (
   `user_id` varchar(32) NOT NULL,
@@ -106,16 +87,6 @@ CREATE TABLE `dego_walletapi` (
   UNIQUE KEY `balance_wallet_address` (`balance_wallet_address`)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
-
-DROP TABLE IF EXISTS `dego_withdraw`;
-CREATE TABLE `dego_withdraw` (
-  `user_id` varchar(32) NOT NULL,
-  `amount` bigint(20) NOT NULL,
-  `to_address` varchar(128) DEFAULT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  KEY `user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
 DROP TABLE IF EXISTS `discord_messages`;
 CREATE TABLE `discord_messages` (
