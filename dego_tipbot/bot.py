@@ -40,14 +40,13 @@ MESSAGE_HISTORY_LAST = 0
 
 ## Get them from https://emojipedia.org
 EMOJI_MONEYBAG = "\U0001F4B0"
-EMOJI_SOS = "\U0001F198"
 EMOJI_ERROR = "\u274C"
 EMOJI_TICK = "\u2705"
 EMOJI_WARNING = "\u26A0"
-EMOJI_ALARMCLOCK = "\u23F0"
-EMOJI_HOURGLASS_NOT_DONE = "\u23F3"
-EMOJI_MONEY_WINGS = "\u23F3"
 EMOJI_SPEAK = "\U0001F4AC"
+EMOJI_STOPSIGN = "\U0001F6D1"
+EMOJI_PURSE = "\U0001F45B"
+EMOJI_HOURGLASS = "\u231B"
 
 NOTIFICATION_OFF_CMD = 'Type: `.notifytip off` to turn off this DM notification.'
 
@@ -142,15 +141,15 @@ async def info(ctx):
     if 'user_wallet_address' in wallet:
         await ctx.message.add_reaction(EMOJI_TICK)
         await ctx.message.author.send(
-            f'**[💁 ACCOUNT INFO]**\n\n'
-            '👛 Deposit Address: `'+wallet['balance_wallet_address']+'`\n'
-            '👛 Registered Wallet: `'+wallet['user_wallet_address']+'`')
+            f'**[ACCOUNT INFO]**\n\n'
+            f'{EMOJI_PURSE} Deposit Address: `'+wallet['balance_wallet_address']+'`\n'
+            f'{EMOJI_MONEYBAG} Registered Wallet: `'+wallet['user_wallet_address']+'`')
     else:
         await ctx.message.add_reaction(EMOJI_WARNING)
         await ctx.message.author.send(
-            f'**[💁 ACCOUNT INFO]**\n\n'
-            '👛 Deposit Address: `'+wallet['balance_wallet_address']+'`\n'
-            '👛 Registered Wallet: `NONE, Please register.`\n')
+            f'**[ACCOUNT INFO]**\n\n'
+            f'{EMOJI_PURSE} Deposit Address: `'+wallet['balance_wallet_address']+'`\n'
+            f'{EMOJI_MONEYBAG} Registered Wallet: `NONE, Please register.`\n')
     return
 
 
@@ -158,8 +157,8 @@ async def info(ctx):
 async def balance(ctx):
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
-    if (walletStatus is None):
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+    if walletStatus is None:
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
         print(walletStatus)
@@ -172,7 +171,7 @@ async def balance(ctx):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -188,7 +187,7 @@ async def balance(ctx):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send( f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
@@ -206,21 +205,21 @@ async def balance(ctx):
             pass
     balance_actual = '{:,.2f}'.format(wallet['actual_balance'] / COIN_DIGITS)
     balance_locked = '{:,.2f}'.format(wallet['locked_balance'] / COIN_DIGITS)
-    await ctx.message.author.send('**[💰 YOUR BALANCE]**\n\n'
-        f'💰 Available: {balance_actual} '
+    await ctx.message.author.send('**[YOUR BALANCE]**\n\n'
+        f'{EMOJI_MONEYBAG} Available: {balance_actual} '
         f'{COIN_REPR}\n'
-        f'👛 Pending: {balance_locked} '
+        f'{EMOJI_HOURGLASS} Pending: {balance_locked} '
         f'{COIN_REPR}\n')
     if ago:
-        await ctx.message.author.send(f'⌛Last update: {ago}')
+        await ctx.message.author.send(f'{EMOJI_HOURGLASS} Last update: {ago}')
 
 
 @bot.command(pass_context=True, aliases=['botbal'], help=bot_help_botbalance)
 async def botbalance(ctx, member: discord.Member=None):
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
-    if (walletStatus is None):
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+    if walletStatus is None:
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
         print(walletStatus)
@@ -233,7 +232,7 @@ async def botbalance(ctx, member: discord.Member=None):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -249,7 +248,7 @@ async def botbalance(ctx, member: discord.Member=None):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send( f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
@@ -262,11 +261,11 @@ async def botbalance(ctx, member: discord.Member=None):
         balance_actual = '{:,.2f}'.format(wallet['actual_balance'] / COIN_DIGITS)
         balance_locked = '{:,.2f}'.format(wallet['locked_balance'] / COIN_DIGITS)
         await ctx.send(
-            f'**[💰 MY BALANCE]**\n\n'
-            f'👛 Deposit Address: `{depositAddress}`\n'
-            f'💰 Available: {balance_actual} '
+            f'**[MY BALANCE]**\n\n'
+            f'{EMOJI_PURSE} Deposit Address: `{depositAddress}`\n'
+            f'{EMOJI_MONEYBAG} Available: {balance_actual} '
             f'{COIN_REPR}\n'
-            f'👛 Pending: {balance_locked} '
+            f'{EMOJI_HOURGLASS} Pending: {balance_locked} '
             f'{COIN_REPR}\n')
         return
     if member.bot == False:
@@ -280,11 +279,11 @@ async def botbalance(ctx, member: discord.Member=None):
         balance_locked = '{:,.2f}'.format(wallet['locked_balance'] / COIN_DIGITS)
         depositAddress = wallet['balance_wallet_address']
         await ctx.send(
-            f'**[💰 INFO BOT {member.name}\'s BALANCE]**\n\n'
-            f'👛 Deposit Address: `{depositAddress}`\n'
-            f'💰 Available: {balance_actual} '
+            f'**[INFO BOT {member.name}\'s BALANCE]**\n\n'
+            f'{EMOJI_PURSE} Deposit Address: `{depositAddress}`\n'
+            f'{EMOJI_MONEYBAG} Available: {balance_actual} '
             f'{COIN_REPR}\n'
-            f'👛 Pending: {balance_locked} '
+            f'{EMOJI_HOURGLASS} Pending: {balance_locked} '
             f'{COIN_REPR}\n')
         return
 
@@ -297,7 +296,7 @@ async def register(ctx, wallet_address: str):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send( f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
@@ -314,14 +313,14 @@ async def register(ctx, wallet_address: str):
     if valid_address is None:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Invalid address:\n'
+                        f'{EMOJI_STOPSIGN} Invalid address:\n'
                         f'`{wallet_address}`')
         return
 
     if (valid_address!=wallet_address) :
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Invalid address:\n'
+                        f'{EMOJI_STOPSIGN} Invalid address:\n'
                         f'`{wallet_address}`')
         return
 
@@ -330,7 +329,7 @@ async def register(ctx, wallet_address: str):
         if (user['balance_wallet_address']==wallet_address) :
             await ctx.message.add_reaction(EMOJI_ERROR)
             await ctx.message.author.send(
-                            '🛑 You can not register with your tipjar\'s address.\n'
+                            f'{EMOJI_STOPSIGN} You can not register with your tipjar\'s address.\n'
                             f'`{wallet_address}`')
             return
         else:
@@ -367,7 +366,7 @@ async def withdraw(ctx, amount: str):
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
     if floodTip >= config.floodTip:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send( '🛑 Cool down your tip or TX. or increase your amount next time.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Cool down your tip or TX. or increase your amount next time.')
         await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} reached max. TX threshold. Currently halted: `.withdraw`')
         return
     elif floodTip >= config.floodTip - 4:
@@ -383,7 +382,7 @@ async def withdraw(ctx, amount: str):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send( f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
@@ -395,8 +394,7 @@ async def withdraw(ctx, amount: str):
         amount = float(amount)
     except ValueError:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        '🛑 Invalid amount.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid amount.')
         return
 
     user = store.sql_get_userwallet(ctx.message.author.id)
@@ -412,7 +410,7 @@ async def withdraw(ctx, amount: str):
     if real_amount + config.tx_fee >= user['actual_balance']:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                               f'🛑 Insufficient balance to withdraw '
+                               f'{EMOJI_STOPSIGN} Insufficient balance to withdraw '
                                f'{real_amount / COIN_DIGITS:.2f} '
                                f'{COIN_REPR}.')
         return
@@ -420,22 +418,22 @@ async def withdraw(ctx, amount: str):
     if real_amount > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}')
         return
     elif real_amount < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be lower than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be lower than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}')
         return
 
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
-    if (walletStatus is None):
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+    if walletStatus is None:
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
         print(walletStatus)
@@ -448,7 +446,7 @@ async def withdraw(ctx, amount: str):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -462,7 +460,7 @@ async def withdraw(ctx, amount: str):
     if (withdrawal is not None):
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         await ctx.message.author.send(
-            f'💰 You have withdrawn {real_amount / COIN_DIGITS:.2f} '
+            f'{EMOJI_MONEYBAG} You have withdrawn {real_amount / COIN_DIGITS:.2f} '
             f'{COIN_REPR}.\n'
             f'Transaction hash: `{withdrawal}`')
         return
@@ -479,7 +477,7 @@ async def donate(ctx, amount: str):
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
     if floodTip >= config.floodTip:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send( '🛑 Cool down your tip or TX. or increase your amount next time.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Cool down your tip or TX. or increase your amount next time.')
         await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} reached max. TX threshold. Currently halted: `.donate`')
         return
     elif floodTip >= config.floodTip - 4:
@@ -495,7 +493,7 @@ async def donate(ctx, amount: str):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send(f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
@@ -506,8 +504,7 @@ async def donate(ctx, amount: str):
         amount = float(amount)
     except ValueError:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        '🛑 Invalid amount.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid amount.')
         return
 
     CoinAddress = f'{config.coin.DonateAddress}'
@@ -517,7 +514,7 @@ async def donate(ctx, amount: str):
     if real_amount + config.tx_fee >= user_from['actual_balance']:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Insufficient balance to donate '
+                        f'{EMOJI_STOPSIGN} Insufficient balance to donate '
                         f'{real_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -525,14 +522,14 @@ async def donate(ctx, amount: str):
     if real_amount > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
 
@@ -540,8 +537,8 @@ async def donate(ctx, amount: str):
 
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
-    if (walletStatus is None):
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+    if walletStatus is None:
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
         print(walletStatus)
@@ -554,7 +551,7 @@ async def donate(ctx, amount: str):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -572,7 +569,7 @@ async def donate(ctx, amount: str):
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         DonateAmount = '{:,.2f}'.format(real_amount / COIN_DIGITS)
         await ctx.message.author.send(
-                        f'💖 TipBot got donation: {DonateAmount} '
+                        f'{EMOJI_MONEYBAG} TipBot got donation: {DonateAmount} '
                         f'{COIN_REPR} '
                         f'\n'
                         f'Thank you. Transaction hash: `{tip}`')
@@ -617,7 +614,7 @@ async def tip(ctx, amount: str, *args):
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
     if floodTip >= config.floodTip:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send( '🛑 Cool down your tip or TX. or increase your amount next time.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Cool down your tip or TX. or increase your amount next time.')
         await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} reached max. TX threshold. Currently halted: `.tip`')
         return
     elif floodTip >= config.floodTip - 4:
@@ -633,14 +630,14 @@ async def tip(ctx, amount: str, *args):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send( f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
     # End Check if maintenance
 
     if isinstance(ctx.channel, discord.DMChannel):
-        await ctx.send('🛑 This command can not be in private.')
+        await ctx.send(f'{EMOJI_STOPSIGN} This command can not be in private.')
         return
 
     amount = amount.replace(",", "")
@@ -661,25 +658,24 @@ async def tip(ctx, amount: str, *args):
                     time_second = sum(int(num) * mult.get(val, 1) for num, val in re.findall('(\d+)(\w+)', time_string))
                 except Exception as e:
                     print(e)
-                    await ctx.send('🛑 Invalid time given. Please use this example: `.tip 1,000 last 5h 12mn`')
+                    await ctx.send(f'{EMOJI_STOPSIGN} Invalid time given. Please use this example: `.tip 1,000 last 5h 12mn`')
                     return
                 try:
                     time_given = int(time_second)
                 except ValueError:
                     await ctx.message.add_reaction(EMOJI_ERROR)
-                    await ctx.message.author.send(
-                                           '🛑 Invalid time given check.')
+                    await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid time given check.')
                     return
                 if time_given:
                     if time_given < 5*60 or time_given > 24*60*60:
                         await ctx.message.add_reaction(EMOJI_ERROR)
-                        await ctx.send('🛑 Please try time inteval between 5 minutes to 24 hours.')
+                        await ctx.send(f'{EMOJI_STOPSIGN} Please try time inteval between 5 minutes to 24 hours.')
                         return
                     else:
                         message_talker = store.sql_get_messages(str(ctx.message.guild.id), str(ctx.message.channel.id), time_given)
                         if len(message_talker) == 0:
                             await ctx.message.add_reaction(EMOJI_ERROR)
-                            await ctx.send('🛑 There is no active talker in such period.')
+                            await ctx.send(f'{EMOJI_STOPSIGN} There is no active talker in such period.')
                             return
                         else:
                             #print(message_talker)
@@ -704,7 +700,7 @@ async def tip(ctx, amount: str, *args):
         amount = float(amount)
     except ValueError:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send('🛑 Invalid amount.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid amount.')
         return
 
     real_amount = int(amount * COIN_DIGITS)
@@ -713,7 +709,7 @@ async def tip(ctx, amount: str, *args):
         print('Insufficient balance to send tip')
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Insufficient balance to send tip of '
+                        f'{EMOJI_STOPSIGN} Insufficient balance to send tip of '
                         f'{real_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR} to {member.mention}.')
         return
@@ -722,7 +718,7 @@ async def tip(ctx, amount: str, *args):
         print('Transactions cannot be bigger than')
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -730,7 +726,7 @@ async def tip(ctx, amount: str, *args):
         print('Transactions cannot be smaller than')
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -738,7 +734,7 @@ async def tip(ctx, amount: str, *args):
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
     if walletStatus is None:
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
         print(walletStatus)
@@ -751,7 +747,7 @@ async def tip(ctx, amount: str, *args):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -772,7 +768,7 @@ async def tip(ctx, amount: str, *args):
         if str(ctx.message.author.id) not in notifyList:
             try:
                 await ctx.message.author.send(
-                                f'💰💖 Tip of {tipAmount} '
+                                f'{EMOJI_MONEYBAG} Tip of {tipAmount} '
                                 f'{COIN_REPR} '
                                 f'was sent to `{member.name}`\n'
                                 f'Transaction hash: `{tip}`')
@@ -784,7 +780,7 @@ async def tip(ctx, amount: str, *args):
         if str(member.id) not in notifyList:
             try:
                 await member.send(
-                            f'💰 You got a tip of {tipAmount} '
+                            f'{EMOJI_MONEYBAG} You got a tip of {tipAmount} '
                             f'{COIN_REPR} from `{ctx.message.author.name}`\n'
                             f'Transaction hash: `{tip}`\n'
                             f'{NOTIFICATION_OFF_CMD}')
@@ -807,7 +803,7 @@ async def tipall(ctx, amount: str):
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
     if floodTip >= config.floodTip:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send( '🛑 Cool down your tip or TX. or increase your amount next time.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Cool down your tip or TX. or increase your amount next time.')
         await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} reached max. TX threshold. Currently halted: `.tipall`')
         return
     elif floodTip >= config.floodTip - 4:
@@ -823,14 +819,14 @@ async def tipall(ctx, amount: str):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send( f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
     # End Check if maintenance
 
     if isinstance(ctx.channel, discord.DMChannel):
-        await ctx.send('🛑 This command can not be in private.')
+        await ctx.send(f'{EMOJI_STOPSIGN} This command can not be in private.')
         return
 
     amount = amount.replace(",", "")
@@ -838,8 +834,7 @@ async def tipall(ctx, amount: str):
         amount = float(amount)
     except ValueError:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        '🛑 Invalid amount.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid amount.')
         return
 
     real_amount = int(amount * COIN_DIGITS)
@@ -859,7 +854,7 @@ async def tipall(ctx, amount: str):
     if real_amount + config.tx_fee >= user_from['actual_balance']:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Insufficient balance to spread tip of '
+                        f'{EMOJI_STOPSIGN} Insufficient balance to spread tip of '
                         f'{real_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -867,14 +862,14 @@ async def tipall(ctx, amount: str):
     if real_amount > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -882,7 +877,7 @@ async def tipall(ctx, amount: str):
     elif (real_amount / len(memids)) < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_tx_amount / COIN_DIGITS:.2f}.')
         return
@@ -897,7 +892,7 @@ async def tipall(ctx, amount: str):
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
     if walletStatus is None:
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
         print(walletStatus)
@@ -910,7 +905,7 @@ async def tipall(ctx, amount: str):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -937,7 +932,7 @@ async def tipall(ctx, amount: str):
         if str(ctx.message.author.id) not in notifyList:
             try:
                 await ctx.message.author.send(
-                                        f'💰💖 Tip of {TotalSpend} '
+                                        f'{EMOJI_MONEYBAG} Tip of {TotalSpend} '
                                         f'{COIN_REPR} '
                                         f'was sent spread to ({len(destinations)}) members.\n'
                                         f'Transaction hash: `{tip}`.\n'
@@ -957,7 +952,7 @@ async def tipall(ctx, amount: str):
                         if str(member.id) not in notifyList:
                             try:
                                 await member.send(
-                                        f'💰 You got a tip of {amountDiv_str} '
+                                        f'{EMOJI_MONEYBAG} You got a tip of {amountDiv_str} '
                                         f'{COIN_REPR} from `{ctx.message.author.name} .tipall`\n'
                                         f'Transaction hash: `{tip}`\n'
                                         f'{NOTIFICATION_OFF_CMD}')
@@ -982,7 +977,7 @@ async def send(ctx, amount: str, CoinAddress: str):
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
     if floodTip >= config.floodTip:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send( '🛑 Cool down your tip or TX. or increase your amount next time.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Cool down your tip or TX. or increase your amount next time.')
         await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} reached max. TX threshold. Currently halted: `.send`')
         return
     elif floodTip >= config.floodTip - 4:
@@ -998,7 +993,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send( f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
@@ -1010,13 +1005,13 @@ async def send(ctx, amount: str, CoinAddress: str):
         if valid_address is None:
             await ctx.message.add_reaction(EMOJI_ERROR)
             await ctx.message.author.send(
-                            f'🛑 Invalid address:\n'
+                            f'{EMOJI_STOPSIGN} Invalid address:\n'
                             f'`{CoinAddress}`')
             return
         if (valid_address!=CoinAddress) :
             await ctx.message.add_reaction(EMOJI_ERROR)
             await ctx.message.author.send(
-                            f'🛑 Invalid address:\n'
+                            f'{EMOJI_STOPSIGN} Invalid address:\n'
                             f'`{CoinAddress}`')
             return
     elif len(CoinAddress) == 185:
@@ -1025,7 +1020,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         if valid_address == 'invalid':
             await ctx.message.add_reaction(EMOJI_ERROR)
             await ctx.message.author.send(
-                            f'🛑 Invalid integrated address:\n'
+                            f'{EMOJI_STOPSIGN} Invalid integrated address:\n'
                             f'`{CoinAddress}`')
             return
         if len(valid_address) == 2:
@@ -1045,7 +1040,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             if valid_address_str is None:
                 await ctx.message.add_reaction(EMOJI_ERROR)
                 await ctx.message.author.send(
-                                       '🛑  Invalid address:\n'
+                                       f'{EMOJI_STOPSIGN}  Invalid address:\n'
                                        f'`{check_address[0]}`')
                 return
             else:
@@ -1054,7 +1049,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             if len(paymentid) == 64:
                 if not re.match(r'[a-zA-Z0-9]{64,}', paymentid.strip()):
                     await ctx.message.add_reaction(EMOJI_ERROR)
-                    await ctx.send(f'🛑  PaymentID: `{paymentid}`\n'
+                    await ctx.send(f'{EMOJI_STOPSIGN}  PaymentID: `{paymentid}`\n'
                                     'Should be in 64 correct format.')
                     return
                 else:
@@ -1064,13 +1059,13 @@ async def send(ctx, amount: str, CoinAddress: str):
                     pass
             else:
                 await ctx.message.add_reaction(EMOJI_ERROR)
-                await ctx.send(f'🛑  PaymentID: `{paymentid}`\n'
+                await ctx.send(f'{EMOJI_STOPSIGN}  PaymentID: `{paymentid}`\n'
                                 'Incorrect length')
                 return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Invalid address:\n'
+                        f'{EMOJI_STOPSIGN} Invalid address:\n'
                         f'`{CoinAddress}`')
         return
 
@@ -1080,8 +1075,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         amount = float(amount)
     except ValueError:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        '🛑 Invalid amount.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid amount.')
         return
 
     real_amount = int(amount * COIN_DIGITS)
@@ -1090,13 +1084,13 @@ async def send(ctx, amount: str, CoinAddress: str):
     if user_from['balance_wallet_address'] == CoinAddress:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 You can not send to your own deposit address.')
+                        f'{EMOJI_STOPSIGN} You can not send to your own deposit address.')
         return
 
     if real_amount + config.tx_fee >= user_from['actual_balance']:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Insufficient balance to send tip of '
+                        f'{EMOJI_STOPSIGN} Insufficient balance to send tip of '
                         f'{real_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR} to {CoinAddress}.')
 
@@ -1105,14 +1099,14 @@ async def send(ctx, amount: str, CoinAddress: str):
     if real_amount > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
 
@@ -1120,8 +1114,8 @@ async def send(ctx, amount: str, CoinAddress: str):
 
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
-    if (walletStatus is None):
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+    if walletStatus is None:
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
         print(walletStatus)
@@ -1134,7 +1128,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -1155,7 +1149,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         if tip:
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
             await ctx.message.author.send(
-                            f'💰💖 Tip of {real_amount / COIN_DIGITS:.2f} '
+                            f'{EMOJI_MONEYBAG} Tip of {real_amount / COIN_DIGITS:.2f} '
                             f'{COIN_REPR} '
                             f'was sent to `{iCoinAddress}`\n'
                             f'Address: `{CoinAddress}`\n'
@@ -1176,7 +1170,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         if tip:
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
             await ctx.message.author.send(
-                            f'💰💖 Tip of {real_amount / COIN_DIGITS:.2f} '
+                            f'{EMOJI_MONEYBAG} Tip of {real_amount / COIN_DIGITS:.2f} '
                             f'{COIN_REPR} '
                             f'was sent to `{CoinAddress}`\n'
                             f'Transaction hash: `{tip}`')
@@ -1203,14 +1197,14 @@ async def address(ctx, *args):
         if len(CoinAddress) == int(config.coin.AddrLen):
             if not re.match(r'dg[a-zA-Z0-9]{95,}', CoinAddress.strip()):
                 await ctx.message.add_reaction(EMOJI_ERROR)
-                await ctx.send(f'🛑 Address: `{CoinAddress}`\n'
+                await ctx.send(f'{EMOJI_STOPSIGN} Address: `{CoinAddress}`\n'
                                 'Checked: Invalid. Should start with dg.')
                 return
             else:
                 valid_address=addressvalidation.validate_address(CoinAddress)
                 if valid_address is None:
                     await ctx.message.add_reaction(EMOJI_ERROR)
-                    await ctx.send(f'🛑 Address: `{CoinAddress}`\n'
+                    await ctx.send(f'{EMOJI_STOPSIGN} Address: `{CoinAddress}`\n'
                                     'Checked: Invalid.')
                     return
                 else:
@@ -1224,14 +1218,14 @@ async def address(ctx, *args):
             # Integrated address
             if not re.match(r'dg[a-zA-Z0-9]{183,}', CoinAddress.strip()):
                 await ctx.message.add_reaction(EMOJI_ERROR)
-                await ctx.send(f'🛑 Integrated Address: `{CoinAddress}`\n'
+                await ctx.send(f'{EMOJI_STOPSIGN} Integrated Address: `{CoinAddress}`\n'
                                 'Checked: Invalid. Should start with dg.')
                 return
             else:
                 valid_address=addressvalidation.validate_integrated(CoinAddress)
                 if valid_address == 'invalid':
                     await ctx.message.add_reaction(EMOJI_ERROR)
-                    await ctx.send(f'🛑 Integrated Address: `{CoinAddress}`\n'
+                    await ctx.send(f'{EMOJI_STOPSIGN} Integrated Address: `{CoinAddress}`\n'
                                     'Checked: Invalid.')
                     return
                 if len(valid_address) == 2:
@@ -1247,7 +1241,7 @@ async def address(ctx, *args):
         else:
             # incorrect length
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.send(f'🛑 Address: `{CoinAddress}`\n'
+            await ctx.send(f'{EMOJI_STOPSIGN} Address: `{CoinAddress}`\n'
                             'Checked: Incorrect length')
             return
     if len(args) == 2:
@@ -1257,35 +1251,35 @@ async def address(ctx, *args):
         if len(CoinAddress) == int(config.coin.AddrLen):
             if not re.match(r'dg[a-zA-Z0-9]{95,}', CoinAddress.strip()):
                 await ctx.message.add_reaction(EMOJI_ERROR)
-                await ctx.send(f'🛑 Address: `{CoinAddress}`\n'
+                await ctx.send(f'{EMOJI_STOPSIGN} Address: `{CoinAddress}`\n'
                                 'Checked: Invalid. Should start with dg.')
                 return
             else:
                 valid_address=addressvalidation.validate_address(CoinAddress)
                 if valid_address is None:
                     await ctx.message.add_reaction(EMOJI_ERROR)
-                    await ctx.send(f'🛑 Address: `{CoinAddress}`\n'
+                    await ctx.send(f'{EMOJI_STOPSIGN} Address: `{CoinAddress}`\n'
                                     'Checked: Incorrect given address.')
                     return
                 else:
                     pass
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.send(f'🛑 Address: `{CoinAddress}`\n'
+            await ctx.send(f'{EMOJI_STOPSIGN} Address: `{CoinAddress}`\n'
                             'Checked: Incorrect length')
             return
         # Check payment ID
         if len(paymentid) == 64:
             if not re.match(r'[a-zA-Z0-9]{64,}', paymentid.strip()):
                 await ctx.message.add_reaction(EMOJI_ERROR)
-                await ctx.send(f'🛑 PaymentID: `{paymentid}`\n'
+                await ctx.send(f'{EMOJI_STOPSIGN} PaymentID: `{paymentid}`\n'
                                 'Checked: Invalid. Should be in 64 correct format.')
                 return
             else:
                 pass
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.send(f'🛑 PaymentID: `{paymentid}`\n'
+            await ctx.send(f'{EMOJI_STOPSIGN} PaymentID: `{paymentid}`\n'
                             'Checked: Incorrect length')
             return
         # Make integrated address:
@@ -1299,7 +1293,7 @@ async def address(ctx, *args):
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.send(f'🛑 ERROR Can not make integrated address.\n')
+            await ctx.send(f'{EMOJI_STOPSIGN} ERROR Can not make integrated address.\n')
             return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
@@ -1324,20 +1318,20 @@ async def optimize(ctx, member: discord.Member = None):
             CountOpt = store.sql_optimize_do(member.id)
             if CountOpt > 0:
                 await ctx.message.add_reaction(EMOJI_TICK)
-                await ctx.message.author.send( f'***Optimize*** is being processed for {member.name} wallet. {CountOpt} fusion tx(s).')
+                await ctx.message.author.send(f'***Optimize*** is being processed for {member.name} wallet. {CountOpt} fusion tx(s).')
                 return
             else:
                 await ctx.message.add_reaction(EMOJI_TICK)
-                await ctx.message.author.send( '🛑 No `optimize` is needed or wait for unlock.')
+                await ctx.message.author.send(f'{EMOJI_STOPSIGN} No `optimize` is needed or wait for unlock.')
                 return
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.send('🛑 You only need to optimize your own tip jar.')
+            await ctx.send(f'{EMOJI_STOPSIGN} You only need to optimize your own tip jar.')
             return
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
     if walletStatus is None:
-        await ctx.send('🛑 Wallet service hasn\'t started.')
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t started.')
         return
     else:
         print(walletStatus)
@@ -1350,7 +1344,7 @@ async def optimize(ctx, member: discord.Member = None):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -1366,7 +1360,7 @@ async def optimize(ctx, member: discord.Member = None):
             pass
         else:
             await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send( f'🛑 {config.maintenance_msg}')
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {config.maintenance_msg}')
             return
     else:
         pass
@@ -1377,12 +1371,12 @@ async def optimize(ctx, member: discord.Member = None):
     if 'lastOptimize' in user_from:
         if int(time.time())-int(user_from['lastOptimize']) < int(config.coin.IntervalOptimize):
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.send('🛑 Please wait. You just did `.optimize` within last 10mn.')
+            await ctx.send(f'{EMOJI_STOPSIGN} Please wait. You just did `.optimize` within last 10mn.')
             return
         pass
     if int(user_from['actual_balance'])/COIN_DIGITS < int(config.coin.MinToOptimize):
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.send('🛑 Your balance may not need to optimize yet.')
+        await ctx.send(f'{EMOJI_STOPSIGN} Your balance may not need to optimize yet.')
         return
     else:
         # check if optimize has done for last 30mn
@@ -1390,7 +1384,7 @@ async def optimize(ctx, member: discord.Member = None):
         countOptimize=store.sql_optimize_check()
         if countOptimize >= 5:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.send('🛑 Please wait. There are a few `.optimize` within last 10mn from other people.')
+            await ctx.send(f'{EMOJI_STOPSIGN} Please wait. There are a few `.optimize` within last 10mn from other people.')
             return
         else:
             #let's optimize and set status
@@ -1401,7 +1395,7 @@ async def optimize(ctx, member: discord.Member = None):
                 return
             else:
                 await ctx.message.add_reaction(EMOJI_TICK)
-                await ctx.message.author.send( '🛑 No `optimize` is needed or wait for unlock.')
+                await ctx.message.author.send(f'{EMOJI_STOPSIGN} No `optimize` is needed or wait for unlock.')
                 return
 
 
@@ -1463,16 +1457,16 @@ async def block(ctx, blockHash: str):
             blockfound = datetime.utcfromtimestamp(int(1545275570)).strftime("%Y-%m-%d %H:%M:%S")
     except ValueError:
         if len(blockHash) != 64:
-            await ctx.send(f'🛑 Invalid block hash: '
+            await ctx.send(f'{EMOJI_STOPSIGN} Invalid block hash: '
                         f'`{blockHash}`')
             return
         if not re.match(r'[a-zA-Z0-9]{64,}', blockHash.strip()):
-            await ctx.send(f'🛑 Invalid block hash: '
+            await ctx.send(f'{EMOJI_STOPSIGN} Invalid block hash: '
                         f'`{blockHash}`')
             return
         hashRes = daemonrpc_client.getblockbyHash(blockHash)
     if hashRes is None:
-        await ctx.send(f'🛑 Block not found: '
+        await ctx.send(f'{EMOJI_STOPSIGN} Block not found: '
                         f'`{blockHash}`')
     else:
         blockfound = datetime.utcfromtimestamp(int(hashRes['block_header']['timestamp'])).strftime("%Y-%m-%d %H:%M:%S")
@@ -1492,7 +1486,7 @@ async def block(ctx, blockHash: str):
 @bot.command(pass_context=True, help=bot_help_tag)
 async def tag(ctx, *args):
     if isinstance(ctx.channel, discord.DMChannel):
-        await ctx.send('🛑 This command can not be in private.')
+        await ctx.send(f'{EMOJI_STOPSIGN} This command can not be in private.')
         return
 
     if len(args) == 0:
@@ -1665,8 +1659,7 @@ async def _tip(ctx, amount):
         amount = float(amount)
     except ValueError:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        '🛑 Invalid amount.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid amount.')
         return
 
     try:
@@ -1679,14 +1672,14 @@ async def _tip(ctx, amount):
     if real_amount > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -1711,7 +1704,7 @@ async def _tip(ctx, amount):
     if ActualSpend + config.tx_fee >= user_from['actual_balance']:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Insufficient balance to send total tip of '
+                        f'{EMOJI_STOPSIGN} Insufficient balance to send total tip of '
                         f'{ActualSpend / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -1719,7 +1712,7 @@ async def _tip(ctx, amount):
     if ActualSpend > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Total transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Total transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -1727,18 +1720,18 @@ async def _tip(ctx, amount):
         print('ActualSpend: '+str(ActualSpend))
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Total transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Total transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
 
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
-    if (walletStatus is None):
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+    if walletStatus is None:
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
-        print(walletStatus)
+        #print(walletStatus)
         localDaemonBlockCount = int(walletStatus['blockCount'])
         networkBlockCount = int(walletStatus['knownBlockCount'])
         if (networkBlockCount-localDaemonBlockCount) >= 20:
@@ -1748,7 +1741,7 @@ async def _tip(ctx, amount):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -1770,7 +1763,7 @@ async def _tip(ctx, amount):
         if str(ctx.message.author.id) not in notifyList:
             try:
                 await ctx.message.author.send(
-                                        f'💰💖 Total tip of {ActualSpend / COIN_DIGITS:.2f} '
+                                        f'{EMOJI_MONEYBAG} Total tip of {ActualSpend / COIN_DIGITS:.2f} '
                                         f'{COIN_REPR} '
                                         f'was sent to ({len(destinations)}) members.\n'
                                         f'Transaction hash: `{tip}`\n'
@@ -1787,7 +1780,7 @@ async def _tip(ctx, amount):
                     if str(member.id) not in notifyList:
                         try:
                             await member.send(
-                                        f'💰 You got a tip of {real_amount / COIN_DIGITS:.2f} '
+                                        f'{EMOJI_MONEYBAG} You got a tip of {real_amount / COIN_DIGITS:.2f} '
                                         f'{COIN_REPR} from `{ctx.message.author.name}`\n'
                                         f'Transaction hash: `{tip}`\n'
                                         f'{NOTIFICATION_OFF_CMD}')
@@ -1811,7 +1804,7 @@ async def _tip_talker(ctx, amount, list_talker):
         amount = float(amount)
     except ValueError:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send('🛑 Invalid amount.')
+        await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid amount.')
         return
 
     try:
@@ -1824,14 +1817,14 @@ async def _tip_talker(ctx, amount, list_talker):
     if real_amount > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -1853,7 +1846,7 @@ async def _tip_talker(ctx, amount, list_talker):
     if ActualSpend + config.tx_fee >= user_from['actual_balance']:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Insufficient balance to send total tip of '
+                        f'{EMOJI_STOPSIGN} Insufficient balance to send total tip of '
                         f'{ActualSpend / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -1861,7 +1854,7 @@ async def _tip_talker(ctx, amount, list_talker):
     if ActualSpend > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Total transactions cannot be bigger than '
+                        f'{EMOJI_STOPSIGN} Total transactions cannot be bigger than '
                         f'{config.max_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -1869,7 +1862,7 @@ async def _tip_talker(ctx, amount, list_talker):
         print('ActualSpend: '+str(ActualSpend))
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'🛑 Total transactions cannot be smaller than '
+                        f'{EMOJI_STOPSIGN} Total transactions cannot be smaller than '
                         f'{config.min_tx_amount / COIN_DIGITS:.2f} '
                         f'{COIN_REPR}.')
         return
@@ -1877,7 +1870,7 @@ async def _tip_talker(ctx, amount, list_talker):
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
     if walletStatus is None:
-        await ctx.send('✋ Wallet service hasn\'t sync properly.')
+        await ctx.send(f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync properly.')
         return
     else:
         localDaemonBlockCount = int(walletStatus['blockCount'])
@@ -1889,7 +1882,7 @@ async def _tip_talker(ctx, amount, list_talker):
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
             await ctx.message.add_reaction(EMOJI_WARNING)
             await ctx.message.author.send(
-                                    '🛑 Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
+                                    f'{EMOJI_STOPSIGN} Wallet service hasn\'t sync fully with network or being re-sync. More info:\n```'
                                     f'networkBlockCount:     {t_networkBlockCount}\n'
                                     f'localDaemonBlockCount: {t_localDaemonBlockCount}\n'
                                     f'Progress %:            {t_percent}\n```'
@@ -1911,7 +1904,7 @@ async def _tip_talker(ctx, amount, list_talker):
         if str(ctx.message.author.id) not in notifyList:
             try:
                 await ctx.message.author.send(
-                                        f'💰💖 Total tip of {ActualSpend / COIN_DIGITS:.2f} '
+                                        f'{EMOJI_MONEYBAG} Total tip of {ActualSpend / COIN_DIGITS:.2f} '
                                         f'{COIN_REPR} '
                                         f'was sent to ({len(destinations)}) members for active talking.\n'
                                         f'Transaction hash: `{tip}`\n'
@@ -1930,7 +1923,7 @@ async def _tip_talker(ctx, amount, list_talker):
                     if str(member_id) not in notifyList:
                         try:
                             await member.send(
-                                        f'💰 You got a tip of {real_amount / COIN_DIGITS:.2f} '
+                                        f'{EMOJI_MONEYBAG} You got a tip of {real_amount / COIN_DIGITS:.2f} '
                                         f'{COIN_REPR} from `{ctx.message.author.name}` for active talking.\n'
                                         f'Transaction hash: `{tip}`\n'
                                         f'{NOTIFICATION_OFF_CMD}')
