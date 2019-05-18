@@ -64,7 +64,6 @@ bot_help_optimize = f"Optimize your tip balance of {COIN_REPR} for large `.tip .
 bot_help_address = f"Check {COIN_REPR} address | Generate {COIN_REPR} integrated address `.address` more info."
 bot_help_paymentid = "Make a random payment ID with 64 chars length."
 bot_help_stats = f"Show summary {COIN_REPR}: height, difficulty, etc."
-bot_help_block = f"Display {COIN_REPR} block information from height or hash."
 bot_help_tag = "Display a description or a link about what it is. (-add|-del) requires permission `manage_channels`"
 bot_help_notifytip = "Toggle notify tip notification from bot ON|OFF"
 
@@ -1446,41 +1445,6 @@ async def stats(ctx):
     else:
         await ctx.send('`Unavailable.`')
         return
-
-
-@bot.command(pass_context=True, help=bot_help_block)
-async def block(ctx, blockHash: str):
-    try:
-        hashID = int(blockHash)
-        hashRes = daemonrpc_client.getblock(blockHash)
-        if hashID == 0:
-            blockfound = datetime.utcfromtimestamp(int(1545275570)).strftime("%Y-%m-%d %H:%M:%S")
-    except ValueError:
-        if len(blockHash) != 64:
-            await ctx.send(f'{EMOJI_STOPSIGN} Invalid block hash: '
-                        f'`{blockHash}`')
-            return
-        if not re.match(r'[a-zA-Z0-9]{64,}', blockHash.strip()):
-            await ctx.send(f'{EMOJI_STOPSIGN} Invalid block hash: '
-                        f'`{blockHash}`')
-            return
-        hashRes = daemonrpc_client.getblockbyHash(blockHash)
-    if hashRes is None:
-        await ctx.send(f'{EMOJI_STOPSIGN} Block not found: '
-                        f'`{blockHash}`')
-    else:
-        blockfound = datetime.utcfromtimestamp(int(hashRes['block_header']['timestamp'])).strftime("%Y-%m-%d %H:%M:%S")
-        if int(hashRes['block_header']['height']) == 0:
-            blockfound = datetime.utcfromtimestamp(int(1545275570)).strftime("%Y-%m-%d %H:%M:%S")
-        ago = str(timeago.format(blockfound, datetime.utcnow()))
-        difficulty = "{:,}".format(hashRes['block_header']['difficulty'])
-        height = "{:,}".format(hashRes['block_header']['height'])
-        hash = hashRes['block_header']['hash']
-        await ctx.send('**[ DEROGOLD ]**\n```'
-                        f'BLOCK HEIGHT {height}\n'
-                        f'BLOCK HASH   {hash}\n'
-                        f'FOUND        {ago}\n'
-                        f'DIFFICULTY   {difficulty}```\n')
 
 
 @bot.command(pass_context=True, help=bot_help_tag)
