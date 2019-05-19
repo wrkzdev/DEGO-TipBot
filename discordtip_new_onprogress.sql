@@ -24,7 +24,7 @@ CREATE TABLE `dego_external_tx` (
 KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
-
+DROP TABLE IF EXISTS `dego_mv_tx`;
 CREATE TABLE `dego_mv_tx` (
 `from_userid` varchar(32) CHARACTER SET ascii NOT NULL,
 `from_name` varchar(32) DEFAULT NULL,
