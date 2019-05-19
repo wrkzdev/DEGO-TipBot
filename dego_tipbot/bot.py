@@ -132,6 +132,18 @@ async def on_message(message):
 
 @bot.command(pass_context=True, name='info', aliases=['wallet', 'tipjar'], help=bot_help_info)
 async def info(ctx):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     user = store.sql_register_user(ctx.message.author.id)
     wallet = store.sql_get_userwallet(ctx.message.author.id)
     if wallet is None:
@@ -154,6 +166,18 @@ async def info(ctx):
 
 @bot.command(pass_context=True, name='balance', aliases=['bal'], help=bot_help_balance)
 async def balance(ctx):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
     if walletStatus is None:
@@ -180,18 +204,6 @@ async def balance(ctx):
             pass
     # End of wallet status
 
-    # Check if maintenance
-    if IS_MAINTENANCE == 1:
-        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
-            pass
-        else:
-            await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
-            return
-    else:
-        pass
-    # End Check if maintenance
-
     user = store.sql_register_user(ctx.message.author.id)
     wallet = store.sql_get_userwallet(ctx.message.author.id)
     if 'lastUpdate' in wallet:
@@ -215,6 +227,18 @@ async def balance(ctx):
 
 @bot.command(pass_context=True, aliases=['botbal'], help=bot_help_botbalance)
 async def botbalance(ctx, member: discord.Member=None):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     # Get wallet status
     walletStatus = daemonrpc_client.getWalletStatus()
     if walletStatus is None:
@@ -240,18 +264,6 @@ async def botbalance(ctx, member: discord.Member=None):
         else:
             pass
     # End of wallet status
-
-    # Check if maintenance
-    if IS_MAINTENANCE == 1:
-        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
-            pass
-        else:
-            await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
-            return
-    else:
-        pass
-    # End Check if maintenance
 
     if member is None:
         user = store.sql_register_user(bot.user.id)
@@ -360,6 +372,18 @@ async def register(ctx, wallet_address: str):
 
 @bot.command(pass_context=True, help=bot_help_withdraw)
 async def withdraw(ctx, amount: str):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     botLogChan = bot.get_channel(id=LOG_CHAN)
     # Check flood of tip
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
@@ -374,18 +398,6 @@ async def withdraw(ctx, amount: str):
     else:
         pass
     # End of Check flood of tip
-
-    # Check if maintenance
-    if IS_MAINTENANCE == 1:
-        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
-            pass
-        else:
-            await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
-            return
-    else:
-        pass
-    # End Check if maintenance
 
     amount = amount.replace(",", "")
 
@@ -471,6 +483,18 @@ async def withdraw(ctx, amount: str):
 
 @bot.command(pass_context=True, help=bot_help_donate)
 async def donate(ctx, amount: str):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     botLogChan = bot.get_channel(id=LOG_CHAN)
     # Check flood of tip
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
@@ -485,18 +509,6 @@ async def donate(ctx, amount: str):
     else:
         pass
     # End of Check flood of tip
-
-    # Check if maintenance
-    if IS_MAINTENANCE == 1:
-        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
-            pass
-        else:
-            await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
-            return
-    else:
-        pass
-    # End Check if maintenance
 
     amount = amount.replace(",", "")
     try:
@@ -608,6 +620,18 @@ async def notifytip(ctx, onoff: str):
 
 @bot.command(pass_context=True, help=bot_help_tip)
 async def tip(ctx, amount: str, *args):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     botLogChan = bot.get_channel(id=LOG_CHAN)
     # Check flood of tip
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
@@ -622,18 +646,6 @@ async def tip(ctx, amount: str, *args):
     else:
         pass
     # End of Check flood of tip
-
-    # Check if maintenance
-    if IS_MAINTENANCE == 1:
-        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
-            pass
-        else:
-            await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
-            return
-    else:
-        pass
-    # End Check if maintenance
 
     if isinstance(ctx.channel, discord.DMChannel):
         await ctx.send(f'{EMOJI_STOPSIGN} This command can not be in private.')
@@ -797,6 +809,18 @@ async def tip(ctx, amount: str, *args):
 
 @bot.command(pass_context=True, help=bot_help_tipall)
 async def tipall(ctx, amount: str):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     botLogChan = bot.get_channel(id=LOG_CHAN)
     # Check flood of tip
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
@@ -811,18 +835,6 @@ async def tipall(ctx, amount: str):
     else:
         pass
     # End of Check flood of tip
-
-    # Check if maintenance
-    if IS_MAINTENANCE == 1:
-        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
-            pass
-        else:
-            await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
-            return
-    else:
-        pass
-    # End Check if maintenance
 
     if isinstance(ctx.channel, discord.DMChannel):
         await ctx.send(f'{EMOJI_STOPSIGN} This command can not be in private.')
@@ -971,6 +983,18 @@ async def tipall(ctx, amount: str):
 
 @bot.command(pass_context=True, help=bot_help_send)
 async def send(ctx, amount: str, CoinAddress: str):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     botLogChan = bot.get_channel(id=LOG_CHAN)
     # Check flood of tip
     floodTip = store.sql_get_countLastTip(ctx.message.author.id, config.floodTipDuration)
@@ -985,18 +1009,6 @@ async def send(ctx, amount: str, CoinAddress: str):
     else:
         pass
     # End of Check flood of tip
-
-    # Check if maintenance
-    if IS_MAINTENANCE == 1:
-        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
-            pass
-        else:
-            await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.message.author.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
-            return
-    else:
-        pass
-    # End Check if maintenance
 
     if len(CoinAddress) == int(config.coin.AddrLen):
         valid_address=addressvalidation.validate_address(CoinAddress)
@@ -1307,6 +1319,18 @@ async def address(ctx, *args):
 
 @bot.command(pass_context=True, name='optimize', aliases=['opt'], help=bot_help_optimize)
 async def optimize(ctx, member: discord.Member = None):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     if member is None:
         pass
     else:
@@ -1353,18 +1377,6 @@ async def optimize(ctx, member: discord.Member = None):
             pass
     # End of wallet status
 
-    # Check if maintenance
-    if IS_MAINTENANCE == 1:
-        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
-            pass
-        else:
-            await ctx.message.add_reaction(EMOJI_WARNING)
-            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
-            return
-    else:
-        pass
-    # End Check if maintenance
-
     ## Check if user has a proper wallet with balance bigger than 100,000,000 real balance
     user_from = store.sql_get_userwallet(ctx.message.author.id)
     if 'lastOptimize' in user_from:
@@ -1409,6 +1421,18 @@ async def paymentid(ctx):
 
 @bot.command(pass_context=True, aliases=['diff', 'height', 'stat'], help=bot_help_stats)
 async def stats(ctx):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     gettopblock = daemonrpc_client.gettopblock()
     print(gettopblock)
     walletStatus = daemonrpc_client.getWalletStatus()
@@ -1615,6 +1639,18 @@ async def update_balance_wallets():
 
 # Multiple tip
 async def _tip(ctx, amount):
+    # Check if maintenance
+    if IS_MAINTENANCE == 1:
+        if int(ctx.message.author.id) in MAINTENANCE_OWNER:
+            pass
+        else:
+            await ctx.message.add_reaction(EMOJI_WARNING)
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} {config.maintenance_msg}')
+            return
+    else:
+        pass
+    # End Check if maintenance
+
     user_from = store.sql_get_userwallet(ctx.message.author.id)
     notifyList = store.sql_get_tipnotify()
     tipees = ctx.message.mentions
