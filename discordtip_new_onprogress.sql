@@ -22,32 +22,23 @@ CREATE TABLE `dego_external_tx` (
 `date` int(11) NOT NULL,
 `tx_hash` varchar(64) NOT NULL,
 KEY `user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii
-
-
-DROP TABLE IF EXISTS `dego_mv_tx`;
-CREATE TABLE `dego_mv_tx` (
-`from_userid` varchar(32) NOT NULL,
-`to_userid` varchar(32) NOT NULL,
-`amount` bigint(20) NOT NULL,
-`type` enum('TIP','TIPS','TIPALL','DONATE') NOT NULL,
-`date` int(11) NOT NULL,
-KEY `from_userid` (`from_userid`),
-KEY `to_userid` (`to_userid`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii
-
-
-DROP TABLE IF EXISTS `dego_server`;
-CREATE TABLE `dego_server` (
-  `server_id` varchar(32) NOT NULL,
-  `prefix` varchar(3) NOT NULL DEFAULT '.',
-  `only_channel` varchar(32) DEFAULT NULL,
-  `comment` varchar(1024) DEFAULT NULL,
-  KEY `server_id` (`server_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
 
-SET NAMES utf8mb4;
+CREATE TABLE `dego_mv_tx` (
+`from_userid` varchar(32) CHARACTER SET ascii NOT NULL,
+`from_name` varchar(32) DEFAULT NULL,
+`to_userid` varchar(32) CHARACTER SET ascii NOT NULL,
+`to_name` varchar(32) DEFAULT NULL,
+`server_id` varchar(32) CHARACTER SET ascii NOT NULL DEFAULT 'DM',
+`server_name` varchar(32) NOT NULL DEFAULT 'DM',
+`amount` bigint(20) NOT NULL,
+`type` enum('TIP','TIPS','TIPALL','DONATE') CHARACTER SET ascii NOT NULL,
+`date` int(11) NOT NULL,
+KEY `from_userid` (`from_userid`),
+KEY `to_userid` (`to_userid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 DROP TABLE IF EXISTS `dego_tag`;
 CREATE TABLE `dego_tag` (
