@@ -25,6 +25,12 @@ wallet:
   host: "127.0.0.1"
   port: "1111"
   mixin: 0
+# this wallet is for sending and withdrawing
+withdrawwallet:
+  host: "127.0.0.1"
+  port: "2222"
+  address: "..."
+  mixin: 1
 # daemon rpc connection information
 daemon:
   host: "127.0.0.1"

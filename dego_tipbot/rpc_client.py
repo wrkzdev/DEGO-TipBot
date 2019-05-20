@@ -29,3 +29,21 @@ def call_method(method_name: str, payload: Dict = None) -> Dict:
     return resp.json().get('result', {})
 
 
+def call_method_sendwithdraw(method_name: str, payload: Dict = None) -> Dict:
+    full_payload = {
+        'params': payload or {},
+        'jsonrpc': '2.0',
+        'id': str(uuid4()),
+        'method': f'{method_name}'
+    }
+    resp = requests.post(
+        f'http://{config.withdrawwallet.host}:{config.withdrawwallet.port}/json_rpc',
+        json=full_payload, timeout=10.0)
+    resp.raise_for_status()
+    json_resp = resp.json()
+    if 'error' in json_resp:
+        raise RPCException(json_resp['error'])
+    return resp.json().get('result', {})
+
+
+

@@ -25,20 +25,21 @@ def getSpendKey(from_address: str) -> str:
     result = rpc_client.call_method('getSpendKeys', payload=payload)
     return result['spendSecretKey']
 
-def send_transaction(from_address: str, to_address: str, amount: int) -> str:
+
+def send_transaction(to_address: str, amount: int) -> str:
     payload = {
-        'addresses': [from_address],
+        'addresses': [config.withdrawwallet.address],
         'transfers': [{
             "amount": amount,
             "address": to_address
         }],
         'fee': config.tx_fee,
-        'anonymity': config.wallet.mixin
+        'anonymity': config.withdrawwallet.mixin
     }
     retry = config.TxRetry
     result = None
     while retry > 0:
-        result = rpc_client.call_method('sendTransaction', payload=payload)
+        result = rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
         if result:
             if 'transactionHash' in result:
                 break
@@ -46,39 +47,21 @@ def send_transaction(from_address: str, to_address: str, amount: int) -> str:
     return result['transactionHash']
 
 
-def send_transaction_id(from_address: str, to_address: str, amount: int, paymentid: str) -> str:
+def send_transaction_id(to_address: str, amount: int, paymentid: str) -> str:
     payload = {
-        'addresses': [from_address],
+        'addresses': [config.withdrawwallet.address],
         'transfers': [{
             "amount": amount,
             "address": to_address
         }],
         'fee': config.tx_fee,
-        'anonymity': config.wallet.mixin,
+        'anonymity': config.withdrawwallet.mixin,
         'paymentId': paymentid
     }
     retry = config.TxRetry
     result = None
     while retry > 0:
-        result = rpc_client.call_method('sendTransaction', payload=payload)
-        if result:
-            if 'transactionHash' in result:
-                break
-        retry = retry - 1
-    return result['transactionHash']
-
-
-def send_transactionall(from_address: str, to_address) -> str:
-    payload = {
-        'addresses': [from_address],
-        'transfers': to_address,
-        'fee': config.tx_fee,
-        'anonymity': config.wallet.mixin
-    }
-    retry = config.TxRetry
-    result = None
-    while retry > 0:
-        result = rpc_client.call_method('sendTransaction', payload=payload)
+        result = rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
         if result:
             if 'transactionHash' in result:
                 break
@@ -93,6 +76,7 @@ def get_all_balances_all() -> Dict[str, Dict]:
         wallet = rpc_client.call_method('getBalance', {'address': address})
         wallets.append({'address':address,'unlocked':wallet['availableBalance'],'locked':wallet['lockedAmount']})
     return wallets
+
 
 def get_some_balances(wallet_addresses: List[str]) -> Dict[str, Dict]:
     wallets = [] ## new array

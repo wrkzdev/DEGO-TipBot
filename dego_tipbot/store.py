@@ -41,6 +41,7 @@ def sql_update_balances():
     finally:
         conn.close()
 
+
 def sql_update_some_balances(wallet_addresses: List[str]):
     print('SQL: Updating some wallet balances')
     balances = wallet.get_some_balances(wallet_addresses)
@@ -132,7 +133,7 @@ def sql_get_userwallet(userID):
                       FROM dego_user WHERE `user_id`=%s LIMIT 1 """
             cur.execute(sql, (str(userID),))
             result = cur.fetchone()
-            if (result is None):
+            if result is None:
                 return None
             else:
                 userwallet = {}
@@ -163,22 +164,14 @@ def sql_get_userwallet(userID):
         conn.close()
 
 
-def sql_get_countLastTip(userID, lastDuration: int):
+def sql_get_countLastTx(userID, lastDuration: int):
     lapDuration = int(time.time()) - lastDuration
     try:
         openConnection()
         with conn.cursor() as cur:
-            sql = """ (SELECT `from_user`,`amount`,`date` FROM dego_tip WHERE `from_user` = %s AND `date`>%s )
-                      UNION
-                      (SELECT `from_user`,`amount_total`,`date` FROM dego_tipall WHERE `from_user` = %s AND `date`>%s )
-                      UNION
-                      (SELECT `from_user`,`amount`,`date` FROM dego_send WHERE `from_user` = %s AND `date`>%s )
-                      UNION
-                      (SELECT `user_id`,`amount`,`date` FROM dego_withdraw WHERE `user_id` = %s AND `date`>%s )
-                      UNION
-                      (SELECT `from_user`,`amount`,`date` FROM dego_donate WHERE `from_user` = %s AND `date`>%s )
+            sql = """ SELECT `user_id`,`date` FROM dego_external_tx WHERE `user_id` = %s AND `date`>%s
                       ORDER BY `date` DESC LIMIT 10 """
-            cur.execute(sql, (str(userID), lapDuration, str(userID), lapDuration, str(userID), lapDuration, str(userID), lapDuration, str(userID), lapDuration,))
+            cur.execute(sql, (str(userID), lapDuration,))
             result = cur.fetchall()
             if result is None:
                 return 0
@@ -190,222 +183,167 @@ def sql_get_countLastTip(userID, lastDuration: int):
         conn.close()
 
 
-def sql_send_tip(user_from: str, user_to: str, amount: int):
-    user_from_wallet = sql_get_userwallet(user_from)
-    user_to_wallet = sql_get_userwallet(user_to)
-    tx_hash = None
-    if all(v is not None for v in [user_from_wallet['balance_wallet_address'], user_to_wallet['balance_wallet_address']]):
-        tx_hash = wallet.send_transaction(user_from_wallet['balance_wallet_address'],
-                      user_to_wallet['balance_wallet_address'], amount)
-        if tx_hash:
-            updateTime = int(time.time())
-            try:
-                openConnection()
-                with conn.cursor() as cur:
-                   timestamp = int(time.time())
-                   sql = """ INSERT INTO dego_tip (`from_user`, `to_user`, `amount`, `date`, `tx_hash`) VALUES (%s, %s, %s, %s, %s) """
-                   cur.execute(sql, (user_from, user_to, amount, timestamp, tx_hash,))
-                   conn.commit()
-                   updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   if updateBalance:
-                       sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_from_wallet['balance_wallet_address'],))
-                       conn.commit()
-                   updateBalance = wallet.get_balance_address(user_to_wallet['balance_wallet_address'])
-                   if updateBalance:
-                       sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_to_wallet['balance_wallet_address'],))
-                       conn.commit()
-            except Exception as e:
-                print(e)
-            finally:
-                conn.close()
-        return tx_hash
-    else:
-        return None
-
-
-def sql_send_tipall(user_from: str, user_tos, amount: int):
-    user_from_wallet = sql_get_userwallet(user_from)
-    tx_hash = None
-    if 'balance_wallet_address' in user_from_wallet:
-        tx_hash = wallet.send_transactionall(user_from_wallet['balance_wallet_address'], user_tos)
-        if tx_hash:
-            try:
-                openConnection()
-                with conn.cursor() as cur:
-                   timestamp = int(time.time())
-                   sql = """ INSERT INTO dego_tipall (`from_user`, `amount_total`, `date`, `tx_hash`) VALUES (%s, %s, %s, %s) """
-                   cur.execute(sql, (user_from, amount, timestamp, tx_hash,))
-                   conn.commit()
-            except Exception as e:
-                print(e)
-            finally:
-                conn.close()
-        return tx_hash
-    else:
-        return None
-
-
-def sql_send_tip_Ex(user_from: str, address_to: str, amount: int):
-    user_from_wallet = sql_get_userwallet(user_from)
-    tx_hash = None
-    if 'balance_wallet_address' in user_from_wallet:
-        tx_hash = wallet.send_transaction(user_from_wallet['balance_wallet_address'], address_to, amount)
-        if tx_hash:
-            try:
-                openConnection()
-                with conn.cursor() as cur:
-                   timestamp = int(time.time())
-                   sql = """ INSERT INTO dego_send (`from_user`, `to_address`, `amount`, `date`, `tx_hash`) VALUES (%s, %s, %s, %s, %s) """
-                   cur.execute(sql, (user_from, address_to, amount, timestamp, tx_hash,))
-                   conn.commit()
-                   updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   if (updateBalance):
-                       sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], int(time.time()), user_from_wallet['balance_wallet_address'],))
-                       conn.commit()
-            except Exception as e:
-                print(e)
-            finally:
-                conn.close()
-        return tx_hash
-    else:
-        return None
-
-
-def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, paymentid):
-    user_from_wallet = sql_get_userwallet(user_from)
-    tx_hash = None
-    if 'balance_wallet_address' in user_from_wallet:
-        tx_hash = wallet.send_transaction_id(user_from_wallet['balance_wallet_address'], address_to, amount, paymentid)
-        if tx_hash:
-            updateTime = int(time.time())
-            try:
-                openConnection()
-                with conn.cursor() as cur:
-                   timestamp = int(time.time())
-                   sql = """ INSERT INTO dego_send (`from_user`, `to_address`, `amount`, `date`, `tx_hash`, `paymentid`) VALUES (%s, %s, %s, %s, %s, %s) """
-                   cur.execute(sql, (user_from, address_to, amount, timestamp, tx_hash, paymentid, ))
-                   conn.commit()
-                   updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   if updateBalance:
-                       sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], updateTime, user_from_wallet['balance_wallet_address'],))
-                       conn.commit()
-            except Exception as e:
-                print(e)
-            finally:
-                conn.close()
-        return tx_hash
-    else:
-        return None
-
-
-def sql_withdraw(user_from: str, amount: int):
-    user_from_wallet = sql_get_userwallet(user_from)
-    tx_hash = None
-    if all(v is not None for v in [user_from_wallet['balance_wallet_address'], user_from_wallet['user_wallet_address']]):
-        tx_hash = wallet.send_transaction(user_from_wallet['balance_wallet_address'], user_from_wallet['user_wallet_address'], amount)
-        if tx_hash:
-            try:
-                openConnection()
-                with conn.cursor() as cur:
-                   timestamp = int(time.time())
-                   sql = """ INSERT INTO dego_withdraw (`user_id`, `to_address`, `amount`, `date`, `tx_hash`) VALUES (%s, %s, %s, %s, %s) """
-                   cur.execute(sql, (user_from, user_from_wallet['user_wallet_address'], amount, timestamp, tx_hash,))
-                   conn.commit()
-                   updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   if updateBalance:
-                       sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], int(time.time()), user_from_wallet['balance_wallet_address'],))
-                       conn.commit()
-            except Exception as e:
-                print(e)
-            finally:
-                conn.close()
-        return tx_hash
-    else:
-        return None
-
-
-def sql_donate(user_from: str, address_to: str, amount: int) -> str:
-    user_from_wallet = sql_get_userwallet(user_from)
-    tx_hash = None
-    if all(v is not None for v in [user_from_wallet['balance_wallet_address'], address_to]):
-        tx_hash = wallet.send_transaction(user_from_wallet['balance_wallet_address'], address_to, amount)
-        if tx_hash:
-            try:
-                openConnection()
-                with conn.cursor() as cur:
-                   timestamp = int(time.time())
-                   sql = """ INSERT INTO dego_donate (`from_user`, `to_address`, `amount`, `date`, `tx_hash`) VALUES (%s, %s, %s, %s, %s) """
-                   cur.execute(sql, (user_from, address_to, amount, timestamp, tx_hash,))
-                   conn.commit()
-                   updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   print(updateBalance)
-                   if (updateBalance):
-                       sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], int(time.time()), user_from_wallet['balance_wallet_address'],))
-                       conn.commit()
-            except Exception as e:
-                print(e)
-            finally:
-                conn.close()
-        return tx_hash
-    else:
-        return None
-
-
-def sql_optimize_check():
+def sql_mv_tx_single(user_from: str, user_name: str, to_user: str, server_id: str, servername: str, messageid: str, amount: int, tiptype: str):
+    global conn
+    if tiptype.upper() not in ["TIP", "DONATE"]:
+        return False
     try:
         openConnection()
-        with conn.cursor() as cur:
-            timeNow = int(time.time()) - int(config.coin.IntervalOptimize)
-            sql = """ SELECT COUNT(*) FROM dego_user WHERE lastOptimize > %s """
-            cur.execute(sql, timeNow, )
-            result = cur.fetchone()
-            return result[0]
-    except Exception as e:
-        print(e)
-    finally:
-        conn.close()
-
-
-def sql_optimize_do(userID: str):
-    user_from_wallet = sql_get_userwallet(userID)
-    print('store.sql_optimize_do..')
-    if user_from_wallet:
-        OptimizeCount = wallet.wallet_optimize_single(user_from_wallet['balance_wallet_address'], user_from_wallet['actual_balance'])
-        if OptimizeCount > 0:
-            sql_optimize_update(str(userID))
-            try:
-                openConnection()
-                with conn.cursor() as cur:
-                   updateBalance = wallet.get_balance_address(user_from_wallet['balance_wallet_address'])
-                   if (updateBalance):
-                       sql = """ UPDATE dego_walletapi SET `actual_balance`=%s, `locked_balance`=%s, `lastUpdate`=%s WHERE `balance_wallet_address`=%s """
-                       cur.execute(sql, (updateBalance['availableBalance'], updateBalance['lockedAmount'], int(time.time()), user_from_wallet['balance_wallet_address'],))
-                       conn.commit()
-            except Exception as e:
-                print(e)
-            finally:
-                conn.close()
-        return OptimizeCount
-
-
-def sql_optimize_update(userID: str):
-    try:
-        openConnection()
-        with conn.cursor() as cur:
-            timeNow=int(time.time())
-            sql = """ UPDATE dego_user SET `lastOptimize`=%s WHERE `user_id`=%s LIMIT 1 """
-            cur.execute(sql, (timeNow, str(userID),))
+        with conn.cursor() as cur: 
+            sql = """ INSERT INTO dego_mv_tx (`from_userid`, `from_name`, `to_userid`, `server_id`, `server_name`, `message_id`, `amount`, `type`, `date`) 
+                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) """
+            cur.execute(sql, (user_from, user_name, to_user, server_id, servername, messageid, amount, tiptype.upper(), int(time.time()),))
             conn.commit()
+        return True
     except Exception as e:
         print(e)
     finally:
         conn.close()
+    return False
+
+
+def sql_mv_tx_multiple(user_from: str, user_name: str, user_tos, server_id: str, servername: str, messageid: str, amount_each: int, tiptype: str):
+    # user_tos is array "account1", "account2", ....
+    global conn
+    if tiptype.upper() not in ["TIPS", "TIPALL"]:
+        return False
+    values_str = []
+    currentTs = int(time.time())
+    for item in user_tos:
+        values_str.append(f"('{user_from}', '{user_name}', '{item}', '{server_id}', '{servername}', '{messageid}', {amount_each}, '{tiptype.upper()}', {currentTs})\n")
+    values_sql = "VALUES " + ",".join(values_str)
+    try:
+        openConnection()
+        with conn.cursor() as cur: 
+            sql = """ INSERT INTO dego_mv_tx (`from_userid`, `from_name`, `to_userid`, `server_id`, `server_name`, `message_id`, `amount`, `type`, `date`) 
+                      """+values_sql+""" """
+            cur.execute(sql,)
+            conn.commit()
+        return True
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
+    return False
+
+
+def sql_adjust_balance(userID: str):
+    global conn
+    try:
+        openConnection()
+        with conn.cursor() as cur: 
+            sql = """ SELECT SUM(amount) AS Expense FROM dego_mv_tx WHERE `from_userid`=%s """
+            cur.execute(sql, userID)
+            result = cur.fetchone()
+            if result:
+                Expense = result[0]
+            else:
+                Expense = 0
+
+            sql = """ SELECT SUM(amount) AS Income FROM dego_mv_tx WHERE `to_userid`=%s """
+            cur.execute(sql, userID)
+            result = cur.fetchone()
+            if result:
+                Income = result[0]
+            else:
+                Income = 0
+
+            sql = """ SELECT SUM(amount) AS DepositWallet FROM dego_deposit_towallet WHERE `user_id`=%s """
+            cur.execute(sql, userID)
+            result = cur.fetchone()
+            if result:
+                DepositWallet = result[0]
+            else:
+                DepositWallet = 0
+
+            sql = """ SELECT SUM(amount) AS TxExpense FROM dego_external_tx WHERE `user_id`=%s """
+            cur.execute(sql, userID)
+            result = cur.fetchone()
+            if result:
+                TxExpense = result[0]
+            else:
+                TxExpense = 0
+
+            sql = """ SELECT SUM(fee) AS TxWithdraw FROM dego_external_tx WHERE `user_id`=%s """
+            cur.execute(sql, userID)
+            result = cur.fetchone()
+            if result:
+                TxWithdraw = result[0]
+            else:
+                TxWithdraw = 0
+
+            sql = """ SELECT SUM(fee) AS IntFeeExpense FROM dego_deposit_towallet WHERE `user_id`=%s """
+            cur.execute(sql, userID)
+            result = cur.fetchone()
+            if result:
+                IntFeeExpense = result[0]
+            else:
+                IntFeeExpense = 0
+
+            balance = {}
+            balance['Expense'] = Expense or 0
+            balance['Income'] = Income or 0
+            balance['DepositWallet'] = DepositWallet or 0
+            balance['TxExpense'] = TxExpense or 0
+            balance['TxWithdraw'] = TxWithdraw or 0
+            balance['IntFeeExpense'] = IntFeeExpense or 0
+            print(balance)
+            balance['Adjust'] = int(balance['DepositWallet'] + balance['Income'] - balance['Expense'] - balance['TxExpense'] - balance['TxWithdraw'] - balance['IntFeeExpense'])
+            print(balance['Adjust'])
+            return balance
+    except Exception as e:
+        print(e)
+    finally:
+        conn.close()
+    return False
+
+
+def sql_send_tip_Ex(user_from: str, address_to: str, amount: int, txtype: str):
+    if txtype.upper() not in ["SEND", "WITHDRAW"]:
+        return None
+    user_from_wallet = sql_get_userwallet(user_from)
+    tx_hash = None
+    if 'balance_wallet_address' in user_from_wallet:
+        tx_hash = wallet.send_transaction(address_to, amount)
+        if tx_hash:
+            try:
+                openConnection()
+                with conn.cursor() as cur:
+                   sql = """ INSERT INTO dego_external_tx (`user_id`, `amount`, `fee`, `to_address`, `type`, `date`, `tx_hash`) VALUES (%s, %s, %s, %s, %s, %s, %s) """
+                   cur.execute(sql, (user_from, amount, config.tx_fee, address_to, txtype.upper(), int(time.time()), tx_hash,))
+                   conn.commit()
+            except Exception as e:
+                print(e)
+            finally:
+                conn.close()
+            return tx_hash
+    else:
+        return None
+
+
+def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, paymentid: str, txtype: str):
+    if txtype.upper() not in ["SEND", "WITHDRAW"]:
+        return None
+    user_from_wallet = sql_get_userwallet(user_from)
+    tx_hash = None
+    if 'balance_wallet_address' in user_from_wallet:
+        tx_hash = wallet.send_transaction_id(address_to, amount, paymentid)
+        if tx_hash:
+            updateTime = int(time.time())
+            try:
+                openConnection()
+                with conn.cursor() as cur:
+                   timestamp = int(time.time())
+                   sql = """ INSERT INTO dego_external_tx (`user_id`, `amount`, `fee`, `to_address`, `paymentid`, `type`, `date`, `tx_hash`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) """
+                   cur.execute(sql, (user_from, amount, config.tx_fee, address_to, paymentid, txtype.upper(), int(time.time()), tx_hash,))
+                   conn.commit()
+            except Exception as e:
+                print(e)
+            finally:
+                conn.close()
+            return tx_hash
+    else:
+        return None
 
 
 def sql_tag_by_server(server_id: str, tag_id: str=None):
