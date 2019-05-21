@@ -411,22 +411,22 @@ async def withdraw(ctx, amount: str):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
                                f'{EMOJI_STOPSIGN} Insufficient balance to withdraw '
-                               f'{real_amount / COIN_DIGITS:.2f} '
+                               f'{real_amount / COIN_DIGITS:,.2f} '
                                f'{COIN_REPR}.')
         return
 
     if real_amount > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
-                        f'{config.max_tx_amount / COIN_DIGITS:.2f} '
+                        f'{EMOJI_STOPSIGN} Transaction cannot be bigger than '
+                        f'{config.max_tx_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}')
         return
     elif real_amount < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be lower than '
-                        f'{config.min_tx_amount / COIN_DIGITS:.2f} '
+                        f'{EMOJI_STOPSIGN} Transaction cannot be lower than '
+                        f'{config.min_tx_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}')
         return
 
@@ -462,13 +462,13 @@ async def withdraw(ctx, amount: str):
     if withdraw:
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         await ctx.message.author.send(
-            f'{EMOJI_MONEYBAG} You have withdrawn {real_amount / COIN_DIGITS:.2f} '
+            f'{EMOJI_MONEYBAG} You have withdrawn {real_amount / COIN_DIGITS:,.2f} '
             f'{COIN_REPR}.\n'
             f'Transaction hash: `{withdraw}`')
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await botLogChan.send(f'A user failed to `.withdraw` amount `{real_amount / COIN_DIGITS:.2f}`')
+        await botLogChan.send(f'A user failed to `.withdraw` amount `{real_amount / COIN_DIGITS:,.2f}`')
         await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report.')
         return
 
@@ -504,22 +504,22 @@ async def donate(ctx, amount: str):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
                         f'{EMOJI_STOPSIGN} Insufficient balance to donate '
-                        f'{real_amount / COIN_DIGITS:.2f} '
+                        f'{real_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
     if real_amount > config.max_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
-                        f'{config.max_mv_amount / COIN_DIGITS:.2f} '
+                        f'{EMOJI_STOPSIGN} Transaction cannot be bigger than '
+                        f'{config.max_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
-                        f'{config.min_mv_amount / COIN_DIGITS:.2f} '
+                        f'{EMOJI_STOPSIGN} Transaction cannot be smaller than '
+                        f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
 
         return
@@ -612,7 +612,7 @@ async def tip(ctx, amount: str, *args):
                     time_second = sum(int(num) * mult.get(val, 1) for num, val in re.findall('(\d+)(\w+)', time_string))
                 except Exception as e:
                     print(e)
-                    await ctx.send(f'{EMOJI_STOPSIGN} Invalid time given. Please use this example: `.tip 1,000 last 5h 12mn`')
+                    await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Invalid time given. Please use this example: `.tip 1,000 last 5h 12mn`')
                     return
                 try:
                     time_given = int(time_second)
@@ -623,13 +623,13 @@ async def tip(ctx, amount: str, *args):
                 if time_given:
                     if time_given < 5*60 or time_given > 24*60*60:
                         await ctx.message.add_reaction(EMOJI_ERROR)
-                        await ctx.send(f'{EMOJI_STOPSIGN} Please try time inteval between 5 minutes to 24 hours.')
+                        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Please try time inteval between 5 minutes to 24 hours.')
                         return
                     else:
                         message_talker = store.sql_get_messages(str(ctx.message.guild.id), str(ctx.message.channel.id), time_given)
                         if len(message_talker) == 0:
                             await ctx.message.add_reaction(EMOJI_ERROR)
-                            await ctx.send(f'{EMOJI_STOPSIGN} There is no active talker in such period.')
+                            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} There is no active talker in such period.')
                             return
                         else:
                             #print(message_talker)
@@ -663,26 +663,26 @@ async def tip(ctx, amount: str, *args):
     if real_amount + config.tx_fee >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
         #print('Insufficient balance to send tip')
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Insufficient balance to send tip of '
-                        f'{real_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Insufficient balance to send tip of '
+                        f'{real_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR} to {member.mention}.')
         return
 
     if real_amount > config.max_mv_amount:
-        #print('Transactions cannot be bigger than')
+        #print('Transaction cannot be bigger than')
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
-                        f'{config.max_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be bigger than '
+                        f'{config.max_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_mv_amount:
-        #print('Transactions cannot be smaller than')
+        #print('Transaction cannot be smaller than')
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
-                        f'{config.min_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be smaller than '
+                        f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
@@ -767,43 +767,42 @@ async def tipall(ctx, amount: str):
     amountDiv = round(real_amount / len(memids), 2)
     if (real_amount / len(memids)) < config.min_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                               f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
-                               f'{config.min_mv_amount:,.2f} '
-                               f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount:,.2f}.')
+        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be smaller than '
+                       f'{config.min_mv_amount:,.2f} '
+                       f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount:,.2f}.')
         return
 
     user_from = store.sql_get_userwallet(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
     if real_amount >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Insufficient balance to spread tip of '
-                        f'{real_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Insufficient balance to spread tip of '
+                        f'{real_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
     if real_amount > config.max_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
-                        f'{config.max_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be bigger than '
+                        f'{config.max_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
-                        f'{config.min_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be smaller than '
+                        f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
     elif (real_amount / len(memids)) < config.min_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
-                        f'{config.min_mv_amount / COIN_DIGITS:.2f} '
-                        f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount / COIN_DIGITS:.2f}.')
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be smaller than '
+                        f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
+                        f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount / COIN_DIGITS:,.2f}.')
         return
 
     notifyList = store.sql_get_tipnotify()
@@ -991,7 +990,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
                         f'{EMOJI_STOPSIGN} Insufficient balance to send tip of '
-                        f'{real_amount / COIN_DIGITS:.2f} '
+                        f'{real_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR} to {CoinAddress}.')
 
         return
@@ -999,15 +998,15 @@ async def send(ctx, amount: str, CoinAddress: str):
     if real_amount > config.max_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
-                        f'{config.max_tx_amount / COIN_DIGITS:.2f} '
+                        f'{EMOJI_STOPSIGN} Transaction cannot be bigger than '
+                        f'{config.max_tx_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_tx_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
-                        f'{config.min_tx_amount / COIN_DIGITS:.2f} '
+                        f'{EMOJI_STOPSIGN} Transaction cannot be smaller than '
+                        f'{config.min_tx_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
 
         return
@@ -1049,7 +1048,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         if tip:
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
             await ctx.message.author.send(
-                            f'{EMOJI_MONEYBAG} Amount {real_amount / COIN_DIGITS:.2f} '
+                            f'{EMOJI_MONEYBAG} Amount {real_amount / COIN_DIGITS:,.2f} '
                             f'{COIN_REPR} '
                             f'was sent to `{iCoinAddress}`\n'
                             f'Address: `{CoinAddress}`\n'
@@ -1058,7 +1057,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:.2f}` using paymentid.')
+            await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:,.2f}` using paymentid.')
             await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report `.send`.')
             return
     else:
@@ -1071,14 +1070,14 @@ async def send(ctx, amount: str, CoinAddress: str):
         if tip:
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
             await ctx.message.author.send(
-                            f'{EMOJI_MONEYBAG} Amount {real_amount / COIN_DIGITS:.2f} '
+                            f'{EMOJI_MONEYBAG} Amount {real_amount / COIN_DIGITS:,.2f} '
                             f'{COIN_REPR} '
                             f'was sent to `{CoinAddress}`\n'
                             f'Transaction hash: `{tip}`')
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:.2f}` without paymentid.')
+            await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:,.2f}` without paymentid.')
             await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report `.send`.')
             return
 
@@ -1450,22 +1449,21 @@ async def _tip(ctx, amount):
     try:
         real_amount = int(round(float(amount) * COIN_DIGITS))
     except:
-        await ctx.message.author.send(
-                                "Amount must be a number.")
+        await ctx.send(f"{EMOJI_STOPSIGN} {ctx.author.mention} Amount must be a number.")
         return
 
     if real_amount > config.max_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
-                        f'{config.max_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be bigger than '
+                        f'{config.max_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
-                        f'{config.min_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be smaller than '
+                        f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
@@ -1481,24 +1479,24 @@ async def _tip(ctx, amount):
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
     if ActualSpend >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Insufficient balance to send total tip of '
-                        f'{ActualSpend / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Insufficient balance to send total tip of '
+                        f'{ActualSpend / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
     if ActualSpend > config.max_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Total transactions cannot be bigger than '
-                        f'{config.max_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Total Transaction cannot be bigger than '
+                        f'{config.max_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Total transactions cannot be smaller than '
-                        f'{config.min_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Total Transaction cannot be smaller than '
+                        f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
@@ -1513,12 +1511,12 @@ async def _tip(ctx, amount):
         if str(ctx.message.author.id) not in notifyList:
             try:
                 await ctx.message.author.send(
-                                        f'{EMOJI_MONEYBAG} Total tip of {ActualSpend / COIN_DIGITS:.2f} '
+                                        f'{EMOJI_MONEYBAG} Total tip of {ActualSpend / COIN_DIGITS:,.2f} '
                                         f'{COIN_REPR} '
                                         f'was sent to ({len(memids)}) members '
                                         f'in server: `{ctx.guild.name}`\n'
-                                        f'Each: `{real_amount / COIN_DIGITS:.2f}{COIN_REPR}`'
-                                        f'Total spending: `{ActualSpend / COIN_DIGITS:.2f}{COIN_REPR}`')
+                                        f'Each: `{real_amount / COIN_DIGITS:,.2f}{COIN_REPR}`'
+                                        f'Total spending: `{ActualSpend / COIN_DIGITS:,.2f}{COIN_REPR}`')
             except Exception as e:
                 print('Adding: ' + str(ctx.message.author.id) + ' not to receive DM tip')
                 store.sql_toggle_tipnotify(str(ctx.message.author.id), "OFF")
@@ -1529,7 +1527,7 @@ async def _tip(ctx, amount):
                     if str(member.id) not in notifyList:
                         try:
                             await member.send(
-                                        f'{EMOJI_MONEYBAG} You got a tip of {real_amount / COIN_DIGITS:.2f} '
+                                        f'{EMOJI_MONEYBAG} You got a tip of {real_amount / COIN_DIGITS:,.2f} '
                                         f'{COIN_REPR} from `{ctx.message.author.name}` '
                                         f'in server: `{ctx.guild.name}`\n'
                                         f'{NOTIFICATION_OFF_CMD}')
@@ -1560,21 +1558,21 @@ async def _tip_talker(ctx, amount, list_talker):
         real_amount = int(round(float(amount) * COIN_DIGITS))
     except:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send("Amount must be a number.")
+        await ctx.send(f"{ctx.author.mention} Amount must be a number.")
         return
 
     if real_amount > config.max_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be bigger than '
-                        f'{config.max_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be bigger than '
+                        f'{config.max_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Transactions cannot be smaller than '
-                        f'{config.min_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be smaller than '
+                        f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
@@ -1588,25 +1586,25 @@ async def _tip_talker(ctx, amount, list_talker):
 
     if ActualSpend >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Insufficient balance to send total tip of '
-                        f'{ActualSpend / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Insufficient balance to send total tip of '
+                        f'{ActualSpend / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
     if ActualSpend > config.max_mv_amount:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Total transactions cannot be bigger than '
-                        f'{config.max_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Total Transaction cannot be bigger than '
+                        f'{config.max_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
     elif real_amount < config.min_mv_amount:
         #print('ActualSpend: '+str(ActualSpend))
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Total transactions cannot be smaller than '
-                        f'{config.min_mv_amount / COIN_DIGITS:.2f} '
+        await ctx.send(
+                        f'{EMOJI_STOPSIGN} {ctx.author.mention} Total Transaction cannot be smaller than '
+                        f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR}.')
         return
 
@@ -1622,12 +1620,12 @@ async def _tip_talker(ctx, amount, list_talker):
         if str(ctx.message.author.id) not in notifyList:
             try:
                 await ctx.message.author.send(
-                                        f'{EMOJI_MONEYBAG} Total tip of {ActualSpend / COIN_DIGITS:.2f} '
+                                        f'{EMOJI_MONEYBAG} Total tip of {ActualSpend / COIN_DIGITS:,.2f} '
                                         f'{COIN_REPR} '
                                         f'was sent to ({len(memids)}) members for active talking '
                                         f'in server: `{ctx.guild.name}`\n'
-                                        f'Each: `{real_amount / COIN_DIGITS:.2f}{COIN_REPR}`'
-                                        f'Total spending: `{ActualSpend / COIN_DIGITS:.2f}{COIN_REPR}`')
+                                        f'Each: `{real_amount / COIN_DIGITS:,.2f}{COIN_REPR}`'
+                                        f'Total spending: `{ActualSpend / COIN_DIGITS:,.2f}{COIN_REPR}`')
             except Exception as e:
                 print('Adding: ' + str(ctx.message.author.id) + ' not to receive DM tip')
                 store.sql_toggle_tipnotify(str(ctx.message.author.id), "OFF")
@@ -1641,7 +1639,7 @@ async def _tip_talker(ctx, amount, list_talker):
                     if str(member_id) not in notifyList:
                         try:
                             await member.send(
-                                        f'{EMOJI_MONEYBAG} You got a tip of {real_amount / COIN_DIGITS:.2f} '
+                                        f'{EMOJI_MONEYBAG} You got a tip of {real_amount / COIN_DIGITS:,.2f} '
                                         f'{COIN_REPR} from `{ctx.message.author.name}` for active talking '
                                         f'in server : `{ctx.guild.name}`\n'
                                         f'{NOTIFICATION_OFF_CMD}')
