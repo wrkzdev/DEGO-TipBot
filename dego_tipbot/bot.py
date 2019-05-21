@@ -207,6 +207,8 @@ async def balance(ctx):
     user = store.sql_register_user(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
     wallet = store.sql_get_userwallet(ctx.message.author.id)
+    #print(wallet)
+    #print(userdata_balance)
     if 'lastUpdate' in wallet:
         await ctx.message.add_reaction(EMOJI_TICK)
         try:
@@ -408,7 +410,7 @@ async def withdraw(ctx, amount: str):
             f'You do not have a withdrawal address, please use '
             f'`.register <wallet_address>` to register.')
         return
-
+    # This is important because it needs to check tipping and other expense.
     if real_amount + config.tx_fee >= user['actual_balance'] + int(userdata_balance['Adjust']):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
@@ -462,6 +464,7 @@ async def withdraw(ctx, amount: str):
     except Exception as e:
         print(e)
     if withdraw:
+        store.sql_update_some_balances([user['balance_wallet_address']])
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         await botLogChan.send(f'A user successfully executed `.withdraw {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}`.')
         await ctx.message.author.send(
@@ -472,7 +475,7 @@ async def withdraw(ctx, amount: str):
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await botLogChan.send(f'A user failed to `.withdraw` amount `{real_amount / COIN_DIGITS:,.2f} {COIN_REPR}`')
-        await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report.')
+        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report.')
         return
 
 
@@ -981,18 +984,18 @@ async def send(ctx, amount: str, CoinAddress: str):
         return
 
     real_amount = int(amount * COIN_DIGITS)
-
+    userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
     user_from = store.sql_get_userwallet(ctx.message.author.id)
     if user_from['balance_wallet_address'] == CoinAddress:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
                         f'{EMOJI_STOPSIGN} You can not send to your own deposit address.')
         return
-
-    if real_amount + config.tx_fee >= user_from['actual_balance']:
+    # This is important because it needs to check tipping and other expense.
+    if real_amount + config.tx_fee >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
-                        f'{EMOJI_STOPSIGN} Insufficient balance to send tip of '
+                        f'{EMOJI_STOPSIGN} Insufficient balance to send '
                         f'{real_amount / COIN_DIGITS:,.2f} '
                         f'{COIN_REPR} to {CoinAddress}.')
 
@@ -1049,6 +1052,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         except Exception as e:
             print(e) 
         if tip:
+            store.sql_update_some_balances([user_from['balance_wallet_address']])
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
             await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` with paymentid.')
             await ctx.message.author.send(
@@ -1072,6 +1076,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         except Exception as e:
             print(e)        
         if tip:
+            store.sql_update_some_balances([user_from['balance_wallet_address']])
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
             await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` without paymentid.')
             await ctx.message.author.send(
