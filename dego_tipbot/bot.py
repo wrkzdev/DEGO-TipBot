@@ -463,6 +463,7 @@ async def withdraw(ctx, amount: str):
         print(e)
     if withdraw:
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
+        await botLogChan.send(f'A user successfully executed `.withdraw {real_amount / COIN_DIGITS:,.2f}`.')
         await ctx.message.author.send(
             f'{EMOJI_MONEYBAG} You have withdrawn {real_amount / COIN_DIGITS:,.2f} '
             f'{COIN_REPR}.\n'
@@ -662,7 +663,7 @@ async def tip(ctx, amount: str, *args):
 
     real_amount = int(amount * COIN_DIGITS)
 
-    if real_amount + config.tx_fee >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
+    if real_amount >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
         #print('Insufficient balance to send tip')
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.send(
@@ -945,7 +946,7 @@ async def send(ctx, amount: str, CoinAddress: str):
                                        f'`{check_address[0]}`')
                 return
             else:
-                valid_address['address'] = valid_address_str
+                valid_address['address'] = check_address[0]
             ## Check payment ID
             if len(paymentid) == 64:
                 if not re.match(r'[a-zA-Z0-9]{64,}', paymentid.strip()):
@@ -955,8 +956,8 @@ async def send(ctx, amount: str, CoinAddress: str):
                     return
                 else:
                     CoinAddress = valid_address['address']
-                    valid_address['paymentid'] = paymentid
-                    iCoinAddress = addressvalidation.make_integrated(valid_address['address'], paymentid)['integrated_address']
+                    valid_address['integrated_id'] = paymentid
+                    iCoinAddress = addressvalidation.make_integrated(CoinAddress, paymentid)['integrated_address']
                     pass
             else:
                 await ctx.message.add_reaction(EMOJI_ERROR)
@@ -1019,7 +1020,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Wallet service hasn\'t sync properly.')
         return
     else:
-        print(walletStatus)
+        #print(walletStatus)
         localDaemonBlockCount = int(walletStatus['blockCount'])
         networkBlockCount = int(walletStatus['knownBlockCount'])
         if (networkBlockCount-localDaemonBlockCount) >= 20:
@@ -1049,6 +1050,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             print(e) 
         if tip:
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
+            await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f}` with paymentid.')
             await ctx.message.author.send(
                             f'{EMOJI_MONEYBAG} Amount {real_amount / COIN_DIGITS:,.2f} '
                             f'{COIN_REPR} '
@@ -1071,6 +1073,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             print(e)        
         if tip:
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
+            await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f}` without paymentid.')
             await ctx.message.author.send(
                             f'{EMOJI_MONEYBAG} Amount {real_amount / COIN_DIGITS:,.2f} '
                             f'{COIN_REPR} '
