@@ -253,7 +253,8 @@ async def botbalance(ctx, member: discord.Member=None):
             f'{EMOJI_MONEYBAG} Available: {balance_actual} '
             f'{COIN_REPR}\n'
             f'{EMOJI_HOURGLASS} Pending: {balance_locked} '
-            f'{COIN_REPR}\n')
+            f'{COIN_REPR}\n'
+            '**This is bot\'s tipjar address. Do not deposit here unless you want to deposit to this bot.**')
         return
     if member.bot == False:
         await ctx.message.add_reaction(EMOJI_ERROR)
@@ -272,7 +273,8 @@ async def botbalance(ctx, member: discord.Member=None):
             f'{EMOJI_MONEYBAG} Available: {balance_actual} '
             f'{COIN_REPR}\n'
             f'{EMOJI_HOURGLASS} Pending: {balance_locked} '
-            f'{COIN_REPR}\n')
+            f'{COIN_REPR}\n'
+            '**This is bot\'s tipjar address. Do not deposit here unless you want to deposit to this bot.**')
         return
 
 
