@@ -463,7 +463,7 @@ async def withdraw(ctx, amount: str):
         print(e)
     if withdraw:
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
-        await botLogChan.send(f'A user successfully executed `.withdraw {real_amount / COIN_DIGITS:,.2f}`.')
+        await botLogChan.send(f'A user successfully executed `.withdraw {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}`.')
         await ctx.message.author.send(
             f'{EMOJI_MONEYBAG} You have withdrawn {real_amount / COIN_DIGITS:,.2f} '
             f'{COIN_REPR}.\n'
@@ -471,7 +471,7 @@ async def withdraw(ctx, amount: str):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await botLogChan.send(f'A user failed to `.withdraw` amount `{real_amount / COIN_DIGITS:,.2f}`')
+        await botLogChan.send(f'A user failed to `.withdraw` amount `{real_amount / COIN_DIGITS:,.2f} {COIN_REPR}`')
         await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report.')
         return
 
@@ -1050,7 +1050,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             print(e) 
         if tip:
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
-            await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f}` with paymentid.')
+            await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` with paymentid.')
             await ctx.message.author.send(
                             f'{EMOJI_MONEYBAG} Amount {real_amount / COIN_DIGITS:,.2f} '
                             f'{COIN_REPR} '
@@ -1061,7 +1061,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:,.2f}` using paymentid.')
+            await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` using paymentid.')
             await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report `.send`.')
             return
     else:
@@ -1073,7 +1073,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             print(e)        
         if tip:
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
-            await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f}` without paymentid.')
+            await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` without paymentid.')
             await ctx.message.author.send(
                             f'{EMOJI_MONEYBAG} Amount {real_amount / COIN_DIGITS:,.2f} '
                             f'{COIN_REPR} '
@@ -1082,7 +1082,7 @@ async def send(ctx, amount: str, CoinAddress: str):
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:,.2f}` without paymentid.')
+            await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` without paymentid.')
             await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report `.send`.')
             return
 
