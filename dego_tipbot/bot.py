@@ -771,7 +771,7 @@ async def tipall(ctx, amount: str):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be smaller than '
                        f'{config.min_mv_amount:,.2f} '
-                       f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount:,.2f}.')
+                       f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount:,.2f} {COIN_REPR}.')
         return
 
     user_from = store.sql_get_userwallet(str(ctx.message.author.id))
@@ -804,7 +804,7 @@ async def tipall(ctx, amount: str):
         await ctx.send(
                         f'{EMOJI_STOPSIGN} {ctx.author.mention} Transaction cannot be smaller than '
                         f'{config.min_mv_amount / COIN_DIGITS:,.2f} '
-                        f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount / COIN_DIGITS:,.2f}.')
+                        f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount / COIN_DIGITS:,.2f} {COIN_REPR}.')
         return
 
     notifyList = store.sql_get_tipnotify()
