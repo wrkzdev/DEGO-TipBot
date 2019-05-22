@@ -506,7 +506,7 @@ async def donate(ctx, amount: str):
     user_from = store.sql_get_userwallet(ctx.message.author.id)
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
 
-    if real_amount >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
+    if real_amount > user_from['actual_balance'] + int(userdata_balance['Adjust']):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
                         f'{EMOJI_STOPSIGN} Insufficient balance to donate '
@@ -666,7 +666,7 @@ async def tip(ctx, amount: str, *args):
 
     real_amount = int(amount * COIN_DIGITS)
 
-    if real_amount >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
+    if real_amount > user_from['actual_balance'] + int(userdata_balance['Adjust']):
         #print('Insufficient balance to send tip')
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.send(
@@ -780,7 +780,7 @@ async def tipall(ctx, amount: str):
 
     user_from = store.sql_get_userwallet(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
-    if real_amount >= user_from['actual_balance'] + int(userdata_balance['Adjust']):
+    if real_amount > user_from['actual_balance'] + int(userdata_balance['Adjust']):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.send(
                         f'{EMOJI_STOPSIGN} {ctx.author.mention} Insufficient balance to spread tip of '
