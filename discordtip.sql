@@ -7,44 +7,55 @@ DROP TABLE IF EXISTS `bot_tipnotify_user`;
 CREATE TABLE `bot_tipnotify_user` (
   `user_id` varchar(32) NOT NULL,
   `date` int(11) NOT NULL,
+  UNIQUE KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=ascii;
+
+
+DROP TABLE IF EXISTS `dego_deposit_towallet`;
+CREATE TABLE `dego_deposit_towallet` (
+  `user_id` varchar(32) NOT NULL,
+  `amount` bigint(20) NOT NULL,
+  `fee` int(11) NOT NULL,
+  `tx_hash` varchar(32) NOT NULL,
+  `from_address` varchar(128) NOT NULL,
+  `to_address` varchar(128) NOT NULL,
+  `date` int(11) NOT NULL,
+  `confirmed` enum('YES','NO') NOT NULL DEFAULT 'YES',
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
 
-DROP TABLE IF EXISTS `dego_donate`;
-CREATE TABLE `dego_donate` (
-  `from_user` varchar(32) NOT NULL,
+DROP TABLE IF EXISTS `dego_external_tx`;
+CREATE TABLE `dego_external_tx` (
+  `user_id` varchar(32) NOT NULL,
+  `amount` bigint(20) NOT NULL,
+  `fee` int(11) NOT NULL,
   `to_address` varchar(128) NOT NULL,
-  `amount` bigint(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  KEY `from_user` (`from_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
-
-
-DROP TABLE IF EXISTS `dego_send`;
-CREATE TABLE `dego_send` (
-  `from_user` varchar(32) NOT NULL,
-  `to_address` varchar(256) NOT NULL,
-  `amount` bigint(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
   `paymentid` varchar(64) DEFAULT NULL,
-  KEY `from_user` (`from_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
-
-
-DROP TABLE IF EXISTS `dego_server`;
-CREATE TABLE `dego_server` (
-  `server_id` varchar(32) NOT NULL,
-  `prefix` varchar(3) NOT NULL DEFAULT '.',
-  `only_channel` varchar(32) DEFAULT NULL,
-  `comment` varchar(1024) DEFAULT NULL,
-  KEY `server_id` (`server_id`)
+  `type` enum('SEND','WITHDRAW') NOT NULL,
+  `date` int(11) NOT NULL,
+  `tx_hash` varchar(64) NOT NULL,
+  KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
 
 SET NAMES utf8mb4;
+
+DROP TABLE IF EXISTS `dego_mv_tx`;
+CREATE TABLE `dego_mv_tx` (
+  `from_userid` varchar(32) CHARACTER SET ascii NOT NULL,
+  `from_name` varchar(32) DEFAULT NULL,
+  `to_userid` varchar(32) CHARACTER SET ascii NOT NULL,
+  `server_id` varchar(32) CHARACTER SET ascii NOT NULL DEFAULT 'DM',
+  `server_name` varchar(32) NOT NULL DEFAULT 'DM',
+  `message_id` varchar(32) CHARACTER SET ascii NOT NULL,
+  `amount` bigint(20) NOT NULL,
+  `type` enum('TIP','TIPS','TIPALL','DONATE') CHARACTER SET ascii NOT NULL,
+  `date` int(11) NOT NULL,
+  KEY `from_userid` (`from_userid`),
+  KEY `to_userid` (`to_userid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 DROP TABLE IF EXISTS `dego_tag`;
 CREATE TABLE `dego_tag` (
@@ -57,28 +68,6 @@ CREATE TABLE `dego_tag` (
   `num_trigger` int(11) NOT NULL DEFAULT '0',
   KEY `tag_id` (`tag_id`),
   KEY `tag_serverid` (`tag_serverid`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
-
-
-DROP TABLE IF EXISTS `dego_tip`;
-CREATE TABLE `dego_tip` (
-  `from_user` varchar(32) NOT NULL,
-  `to_user` varchar(32) NOT NULL,
-  `amount` bigint(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  KEY `from_user` (`from_user`),
-  KEY `to_user` (`to_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
-
-
-DROP TABLE IF EXISTS `dego_tipall`;
-CREATE TABLE `dego_tipall` (
-  `from_user` varchar(32) NOT NULL,
-  `amount_total` bigint(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  KEY `from_user` (`from_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
 
@@ -107,28 +96,19 @@ CREATE TABLE `dego_walletapi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii;
 
 
-DROP TABLE IF EXISTS `dego_withdraw`;
-CREATE TABLE `dego_withdraw` (
-  `user_id` varchar(32) NOT NULL,
-  `amount` bigint(20) NOT NULL,
-  `to_address` varchar(128) DEFAULT NULL,
-  `date` int(11) NOT NULL,
-  `tx_hash` varchar(64) NOT NULL,
-  KEY `user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii;
-
 DROP TABLE IF EXISTS `discord_messages`;
 CREATE TABLE `discord_messages` (
-`serverid` varchar(32) CHARACTER SET ascii NOT NULL,
-`server_name` varchar(64) NOT NULL,
-`channel_id` varchar(32) CHARACTER SET ascii NOT NULL,
-`channel_name` varchar(64) NOT NULL,
-`user_id` varchar(32) CHARACTER SET ascii NOT NULL,
-`message_author` varchar(32) NOT NULL,
-`message_id` varchar(32) CHARACTER SET ascii NOT NULL,
-`message_time` int(11) NOT NULL,
-UNIQUE KEY `message_id` (`message_id`),
-KEY `message_time` (`message_time`),
-KEY `serverid` (`serverid`),
-KEY `channel_id` (`channel_id`)
+  `serverid` varchar(32) CHARACTER SET ascii NOT NULL,
+  `server_name` varchar(64) NOT NULL,
+  `channel_id` varchar(32) CHARACTER SET ascii NOT NULL,
+  `channel_name` varchar(64) NOT NULL,
+  `user_id` varchar(32) CHARACTER SET ascii NOT NULL,
+  `message_author` varchar(32) NOT NULL,
+  `message_id` varchar(32) CHARACTER SET ascii NOT NULL,
+  `message_time` int(11) NOT NULL,
+  UNIQUE KEY `message_id` (`message_id`),
+  KEY `message_time` (`message_time`),
+  KEY `serverid` (`serverid`),
+  KEY `channel_id` (`channel_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
