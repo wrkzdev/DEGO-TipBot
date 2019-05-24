@@ -541,6 +541,7 @@ async def donate(ctx, amount: str):
         print(e)
     if tip:
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
+        await botLogChan.send(f'A user has donated amount `{real_amount / COIN_DIGITS:,.2f} {COIN_REPR}`.')
         DonateAmount = '{:,.2f}'.format(real_amount / COIN_DIGITS)
         await ctx.message.author.send(
                         f'{EMOJI_MONEYBAG} TipBot got donation: {DonateAmount} '
@@ -1066,7 +1067,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
             await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` using paymentid.')
-            await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report `.send`.')
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report `.send`.')
             return
     else:
         #print('Process normal address...')
@@ -1088,7 +1089,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
             await botLogChan.send(f'A user failed to `.send` amount `{real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` without paymentid.')
-            await ctx.send('{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report `.send`.')
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Internal Error. Please report `.send`.')
             return
 
 
