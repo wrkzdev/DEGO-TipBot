@@ -1552,7 +1552,7 @@ async def _tip(ctx, amount):
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.send(f'{ctx.author.mention} Can not deliver TX right now. Try again soon.')
+        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Can not deliver TX right now. Try again soon.')
         return
 
 
@@ -1637,7 +1637,7 @@ async def _tip_talker(ctx, amount, list_talker):
                                         f'{EMOJI_MONEYBAG} Total tip of {ActualSpend / COIN_DIGITS:,.2f} '
                                         f'{COIN_REPR} '
                                         f'was sent to ({len(memids)}) members for active talking '
-                                        f'in server: `{ctx.guild.name}`\n'
+                                        f'in server: `{ctx.guild.name}` channel: `{ctx.channel.name}`\n'
                                         f'Each: `{real_amount / COIN_DIGITS:,.2f}{COIN_REPR}`'
                                         f'Total spending: `{ActualSpend / COIN_DIGITS:,.2f}{COIN_REPR}`')
             except Exception as e:
@@ -1655,17 +1655,17 @@ async def _tip_talker(ctx, amount, list_talker):
                             await member.send(
                                         f'{EMOJI_MONEYBAG} You got a tip of {real_amount / COIN_DIGITS:,.2f} '
                                         f'{COIN_REPR} from `{ctx.message.author.name}` for active talking '
-                                        f'in server : `{ctx.guild.name}`\n'
+                                        f'in server : `{ctx.guild.name}` channel: `{ctx.channel.name}`\n'
                                         f'{NOTIFICATION_OFF_CMD}')
                         except Exception as e:
                             print('Adding: ' + str(member.id) + ' not to receive DM tip')
                             store.sql_toggle_tipnotify(str(member.id), "OFF")
                             print(e)
-        await ctx.send(f'{mention_list_name}\n\nYou got tip :) for active talking in `{ctx.guild.name}`:)')
+        await ctx.send(f'{mention_list_name}\n\nYou got tip :) for active talking in `{ctx.guild.name}` {ctx.channel.mention}:)')
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.send(f'{ctx.author.mention} Can not deliver Tip right now. Try again soon.')
+        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Can not deliver Tip right now. Try again soon.')
         return
 
 
