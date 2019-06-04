@@ -611,14 +611,23 @@ async def tip(ctx, amount: str, *args):
                 time_string = ctx.message.content.lower().split("last",1)[1].strip()
                 time_second = None
                 try:
+                    time_string = time_string.replace("years", "y")
+                    time_string = time_string.replace("yrs", "y")
+                    time_string = time_string.replace("yr", "y")
+                    time_string = time_string.replace("year", "y")
+                    time_string = time_string.replace("months", "mon")
+                    time_string = time_string.replace("month", "mon")
+                    time_string = time_string.replace("mons", "mon")
+                    time_string = time_string.replace("weeks", "w")
+                    time_string = time_string.replace("week", "w")
                     time_string = time_string.replace("days", "d")
                     time_string = time_string.replace("day", "d")
                     time_string = time_string.replace("hours", "h")
                     time_string = time_string.replace("minutes", "mn")
+                    time_string = time_string.replace("hr", "h")
                     time_string = time_string.replace("hrs", "h")
                     time_string = time_string.replace("mns", "mn")
-                    time_string = time_string.replace("mn", "m")
-                    mult = {'d': 24*60*60, 'h': 60*60, 'm': 60}
+                    mult = {'y': 12*30*24*60*60, 'mon': 30*24*60*60, 'w': 7*24*60*60, 'd': 24*60*60, 'h': 60*60, 'mn': 60}
                     time_second = sum(int(num) * mult.get(val, 1) for num, val in re.findall('(\d+)(\w+)', time_string))
                 except Exception as e:
                     print(e)
@@ -630,10 +639,11 @@ async def tip(ctx, amount: str, *args):
                     await ctx.message.add_reaction(EMOJI_ERROR)
                     await ctx.message.author.send(f'{EMOJI_STOPSIGN} Invalid time given check.')
                     return
+                print('time_given:'+str(time_given))
                 if time_given:
-                    if time_given < 5*60 or time_given > 7*24*60*60:
+                    if time_given < 5*60 or time_given > 5*365*24*60*60:
                         await ctx.message.add_reaction(EMOJI_ERROR)
-                        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Please try time inteval between 5 minutes to 7 days.')
+                        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Please try time inteval between 5 minutes to 5 years.')
                         return
                     else:
                         message_talker = store.sql_get_messages(str(ctx.message.guild.id), str(ctx.message.channel.id), time_given)
