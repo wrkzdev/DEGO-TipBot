@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import rpc_client
 import requests, json
+import aiohttp
 
 import sys
 sys.path.append("..")
@@ -33,32 +34,6 @@ def gettopblock():
     result = call_method('getblockcount')
     #print(result)
     data = '{"jsonrpc":"2.0","method":"getblockheaderbyheight","params":{"height":'+str(result['count'] - 1)+'}}'
-    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data, timeout=3.0)
-    json_resp = response.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    response.raise_for_status()
-    json_resp = response.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    return response.json().get('result', {})
-
-
-def getblock(blockH: str=None):
-    data = '{"jsonrpc":"2.0","method":"getblockheaderbyheight","params":{"height":'+str(blockH)+'}}'
-    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data, timeout=3.0)
-    json_resp = response.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    response.raise_for_status()
-    json_resp = response.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    return response.json().get('result', {})
-
-
-def getblockbyHash(blockH: str=None):
-    data = '{"jsonrpc":"2.0","method":"getblockheaderbyhash","params":{"hash":"'+str(blockH)+'"}}'
     response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data, timeout=3.0)
     json_resp = response.json()
     if 'error' in json_resp:
