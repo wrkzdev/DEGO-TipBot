@@ -4,6 +4,7 @@ from uuid import uuid4
 import rpc_client
 import requests, json
 import aiohttp
+import asyncio
 
 import sys
 sys.path.append("..")
@@ -13,36 +14,34 @@ class RPCException(Exception):
     def __init__(self, message):
         super(RPCException, self).__init__(message)
 
-def call_method(method_name: str, payload: Dict = None) -> Dict:
+async def call_method(method_name: str, payload: Dict = None) -> Dict:
+    url = f'http://{config.daemon.host}:{config.daemon.port}/json_rpc'
     full_payload = {
         'params': payload or {},
         'jsonrpc': '2.0',
         'id': str(uuid4()),
         'method': f'{method_name}'
     }
-    resp = requests.post(
-        f'http://{config.daemon.host}:{config.daemon.port}/json_rpc',
-        json=full_payload, timeout=3.0)
-    resp.raise_for_status()
-    json_resp = resp.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    return resp.json().get('result', {})
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=full_payload, timeout=5) as response:
+            res_data = await response.json()
+            await session.close()
+            return res_data['result']
 
 
-def gettopblock():
-    result = call_method('getblockcount')
-    #print(result)
-    data = '{"jsonrpc":"2.0","method":"getblockheaderbyheight","params":{"height":'+str(result['count'] - 1)+'}}'
-    response = requests.post(f'http://{config.daemon.host}:{config.daemon.port}/json_rpc', data=data, timeout=3.0)
-    json_resp = response.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    response.raise_for_status()
-    json_resp = response.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    return response.json().get('result', {})
+async def gettopblock():
+    url = f'http://{config.daemon.host}:{config.daemon.port}/json_rpc'
+    result = await call_method('getblockcount')
+    full_payload = {
+        'jsonrpc': '2.0',
+        'method': 'getblockheaderbyheight',
+        'params': {'height': result['count'] - 1}
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=full_payload, timeout=5) as response:
+            res_data = await response.json()
+            await session.close()
+            return res_data['result']
 
 
 def getWalletStatus():

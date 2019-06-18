@@ -1254,7 +1254,7 @@ async def stats(ctx):
         pass
     # End Check if maintenance
 
-    gettopblock = daemonrpc_client.gettopblock()
+    gettopblock = await daemonrpc_client.gettopblock()
     #print(gettopblock)
     walletStatus = daemonrpc_client.getWalletStatus()
     if gettopblock:
