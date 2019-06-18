@@ -6,10 +6,11 @@ sys.path.append("..")
 import rpc_client
 import requests
 from config import config
+import asyncio
 
 
-def register() -> str:
-    result = rpc_client.call_method('createAddress')
+async def register() -> str:
+    result = await rpc_client.call_method('createAddress')
     reg_address = {}
     reg_address['address'] = result['address']
     reg_address['privateSpendKey'] = getSpendKey(result['address'])
@@ -18,15 +19,15 @@ def register() -> str:
     ## End print log ID,spendkey to log file
     return reg_address
 
-def getSpendKey(from_address: str) -> str:
+async def getSpendKey(from_address: str) -> str:
     payload = {
         'address': from_address
     }
-    result = rpc_client.call_method('getSpendKeys', payload=payload)
+    result = await rpc_client.call_method('getSpendKeys', payload=payload)
     return result['spendSecretKey']
 
 
-def send_transaction(to_address: str, amount: int) -> str:
+async def send_transaction(to_address: str, amount: int) -> str:
     payload = {
         'addresses': [config.withdrawwallet.address],
         'transfers': [{
@@ -39,7 +40,7 @@ def send_transaction(to_address: str, amount: int) -> str:
     retry = config.TxRetry
     result = None
     while retry > 0:
-        result = rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
+        result = await rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
         if result:
             if 'transactionHash' in result:
                 break
@@ -47,7 +48,7 @@ def send_transaction(to_address: str, amount: int) -> str:
     return result['transactionHash']
 
 
-def send_transaction_id(to_address: str, amount: int, paymentid: str) -> str:
+async def send_transaction_id(to_address: str, amount: int, paymentid: str) -> str:
     payload = {
         'addresses': [config.withdrawwallet.address],
         'transfers': [{
@@ -61,7 +62,7 @@ def send_transaction_id(to_address: str, amount: int, paymentid: str) -> str:
     retry = config.TxRetry
     result = None
     while retry > 0:
-        result = rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
+        result = await rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
         if result:
             if 'transactionHash' in result:
                 break
@@ -69,25 +70,26 @@ def send_transaction_id(to_address: str, amount: int, paymentid: str) -> str:
     return result['transactionHash']
 
 
-def get_all_balances_all() -> Dict[str, Dict]:
-    walletCall = rpc_client.call_method('getAddresses')
+async def get_all_balances_all() -> Dict[str, Dict]:
+    walletCall = await rpc_client.call_method('getAddresses')
     wallets = [] ## new array
     for address in walletCall['addresses']:
-        wallet = rpc_client.call_method('getBalance', {'address': address})
+        wallet = await rpc_client.call_method('getBalance', {'address': address})
         wallets.append({'address':address,'unlocked':wallet['availableBalance'],'locked':wallet['lockedAmount']})
     return wallets
 
 
-def get_some_balances(wallet_addresses: List[str]) -> Dict[str, Dict]:
+async def get_some_balances(wallet_addresses: List[str]) -> Dict[str, Dict]:
     wallets = [] ## new array
     for address in wallet_addresses:
-        wallet = rpc_client.call_method('getBalance', {'address': address})
+        wallet = await rpc_client.call_method('getBalance', {'address': address})
         wallets.append({'address':address,'unlocked':wallet['availableBalance'],'locked':wallet['lockedAmount']})
     return wallets
 
-def get_balance_address(address: str) -> Dict[str, Dict]:
-    result = rpc_client.call_method('getBalance', {'address': address})
+async def get_balance_address(address: str) -> Dict[str, Dict]:
+    result = await rpc_client.call_method('getBalance', {'address': address})
     return result
+
 
 def wallet_optimize_single(subaddress: str, threshold: int) -> int:
     params = {

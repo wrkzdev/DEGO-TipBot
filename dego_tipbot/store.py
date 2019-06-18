@@ -7,6 +7,7 @@ import sys
 sys.path.append("..")
 import wallet, daemonrpc_client
 from config import config
+import asyncio
 
 # MySQL
 import pymysql
@@ -25,9 +26,9 @@ def openConnection():
         sys.exit()
 
 
-def sql_update_balances():
+async def sql_update_balances():
     print('SQL: Updating all wallet balances')
-    balances = wallet.get_all_balances_all()
+    balances = await wallet.get_all_balances_all()
     try:
         openConnection()
         with conn.cursor() as cur:
@@ -42,9 +43,9 @@ def sql_update_balances():
         conn.close()
 
 
-def sql_update_some_balances(wallet_addresses: List[str]):
+async def sql_update_some_balances(wallet_addresses: List[str]):
     print('SQL: Updating some wallet balances')
-    balances = wallet.get_some_balances(wallet_addresses)
+    balances = await wallet.get_some_balances(wallet_addresses)
     try:
         openConnection()
         with conn.cursor() as cur:
@@ -59,7 +60,7 @@ def sql_update_some_balances(wallet_addresses: List[str]):
         conn.close()
 
 
-def sql_register_user(userID):
+async def sql_register_user(userID):
     try:
         openConnection()
         with conn.cursor() as cur:
@@ -67,7 +68,7 @@ def sql_register_user(userID):
             cur.execute(sql, (userID))
             result = cur.fetchone()
             if result is None:
-                balance_address = wallet.register()
+                balance_address = await wallet.register()
                 if (balance_address is None):
                    print('Internal error during call register wallet-api')
                    return
@@ -99,7 +100,7 @@ def sql_register_user(userID):
         conn.close()
 
 
-def sql_update_user(userID, user_wallet_address):
+async def sql_update_user(userID, user_wallet_address):
     try:
         openConnection()
         with conn.cursor() as cur:
@@ -107,7 +108,7 @@ def sql_update_user(userID, user_wallet_address):
             cur.execute(sql, (userID))
             result = cur.fetchone()
             if result is None:
-                balance_address = wallet.register()
+                balance_address = await wallet.register()
                 if (balance_address is None):
                    print('Internal error during call register wallet-api')
                    return
@@ -298,13 +299,13 @@ def sql_adjust_balance(userID: str):
     return False
 
 
-def sql_send_tip_Ex(user_from: str, address_to: str, amount: int, txtype: str):
+async def sql_send_tip_Ex(user_from: str, address_to: str, amount: int, txtype: str):
     if txtype.upper() not in ["SEND", "WITHDRAW"]:
         return None
     user_from_wallet = sql_get_userwallet(user_from)
     tx_hash = None
     if 'balance_wallet_address' in user_from_wallet:
-        tx_hash = wallet.send_transaction(address_to, amount)
+        tx_hash = await wallet.send_transaction(address_to, amount)
         if tx_hash:
             try:
                 openConnection()
@@ -321,13 +322,13 @@ def sql_send_tip_Ex(user_from: str, address_to: str, amount: int, txtype: str):
         return None
 
 
-def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, paymentid: str, txtype: str):
+async def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, paymentid: str, txtype: str):
     if txtype.upper() not in ["SEND", "WITHDRAW"]:
         return None
     user_from_wallet = sql_get_userwallet(user_from)
     tx_hash = None
     if 'balance_wallet_address' in user_from_wallet:
-        tx_hash = wallet.send_transaction_id(address_to, amount, paymentid)
+        tx_hash = await wallet.send_transaction_id(address_to, amount, paymentid)
         if tx_hash:
             updateTime = int(time.time())
             try:

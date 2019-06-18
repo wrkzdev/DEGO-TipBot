@@ -144,7 +144,7 @@ async def info(ctx):
         pass
     # End Check if maintenance
 
-    user = store.sql_register_user(str(ctx.message.author.id))
+    user = await store.sql_register_user(str(ctx.message.author.id))
     wallet = store.sql_get_userwallet(str(ctx.message.author.id))
     if wallet is None:
         await ctx.message.author.send('Internal Error for `.info`')
@@ -179,7 +179,7 @@ async def balance(ctx):
     # End Check if maintenance
 
     # Get wallet status
-    walletStatus = daemonrpc_client.getWalletStatus()
+    walletStatus = await daemonrpc_client.getWalletStatus()
     if walletStatus is None:
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Wallet service hasn\'t sync properly.')
         return
@@ -204,7 +204,7 @@ async def balance(ctx):
             pass
     # End of wallet status
 
-    user = store.sql_register_user(str(ctx.message.author.id))
+    user = await store.sql_register_user(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
     wallet = store.sql_get_userwallet(ctx.message.author.id)
     #print(wallet)
@@ -243,7 +243,7 @@ async def botbalance(ctx, member: discord.Member=None):
     # End Check if maintenance
 
     if member is None:
-        user = store.sql_register_user(str(bot.user.id))
+        user = await store.sql_register_user(str(bot.user.id))
         wallet = store.sql_get_userwallet(bot.user.id)
         userdata_balance = store.sql_adjust_balance(str(bot.user.id))
         depositAddress = wallet['balance_wallet_address']
@@ -263,7 +263,7 @@ async def botbalance(ctx, member: discord.Member=None):
         await bctx.message.author.send('Only for bot!!')
         return
     else:
-        user = store.sql_register_user(str(member.id))
+        user = await store.sql_register_user(str(member.id))
         wallet = store.sql_get_userwallet(member.id)
         userdata_balance = store.sql_adjust_balance(str(member.id))
         balance_actual = '{:,.2f}'.format((wallet['actual_balance']+int(userdata_balance['Adjust'])) / COIN_DIGITS)
@@ -332,7 +332,7 @@ async def register(ctx, wallet_address: str):
         
     if 'user_wallet_address' in existing_user:
         prev_address = existing_user['user_wallet_address']
-        store.sql_update_user(user_id, wallet_address)
+        await store.sql_update_user(user_id, wallet_address)
         if prev_address:
             await ctx.message.add_reaction(EMOJI_TICK)
             await ctx.message.author.send(
@@ -342,7 +342,7 @@ async def register(ctx, wallet_address: str):
             return
         pass
     else:
-        user = store.sql_update_user(user_id, wallet_address)
+        user = await store.sql_update_user(user_id, wallet_address)
         await ctx.message.add_reaction(EMOJI_TICK)
         await ctx.message.author.send(
                                'You have been registered a withdraw address.\n'
@@ -435,7 +435,7 @@ async def withdraw(ctx, amount: str):
         return
 
     # Get wallet status
-    walletStatus = daemonrpc_client.getWalletStatus()
+    walletStatus = await daemonrpc_client.getWalletStatus()
     if walletStatus is None:
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Wallet service hasn\'t sync properly.')
         return
@@ -460,11 +460,11 @@ async def withdraw(ctx, amount: str):
 
     withdraw = None
     try:
-        withdraw = store.sql_send_tip_Ex(str(ctx.message.author.id), user['user_wallet_address'], real_amount, "WITHDRAW")
+        withdraw = await store.sql_send_tip_Ex(str(ctx.message.author.id), user['user_wallet_address'], real_amount, "WITHDRAW")
     except Exception as e:
         print(e)
     if withdraw:
-        store.sql_update_some_balances([user['balance_wallet_address']])
+        await store.sql_update_some_balances([user['balance_wallet_address']])
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         await botLogChan.send(f'A user successfully executed `.withdraw {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}`.')
         await ctx.message.author.send(
@@ -669,7 +669,7 @@ async def tip(ctx, amount: str, *args):
 
     user_from = store.sql_get_userwallet(ctx.message.author.id)
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
-    user_to = store.sql_register_user(member.id)
+    user_to = await store.sql_register_user(member.id)
 
     try:
         amount = float(amount)
@@ -1032,7 +1032,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         return
 
     # Get wallet status
-    walletStatus = daemonrpc_client.getWalletStatus()
+    walletStatus = await daemonrpc_client.getWalletStatus()
     if walletStatus is None:
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Wallet service hasn\'t sync properly.')
         return
@@ -1062,11 +1062,11 @@ async def send(ctx, amount: str, CoinAddress: str):
         #print('Process integrate address...')
         tip = None
         try:
-            tip = store.sql_send_tip_Ex_id(str(ctx.message.author.id), CoinAddress, real_amount, paymentid, "SEND")
+            tip = await store.sql_send_tip_Ex_id(str(ctx.message.author.id), CoinAddress, real_amount, paymentid, "SEND")
         except Exception as e:
             print(e) 
         if tip:
-            store.sql_update_some_balances([user_from['balance_wallet_address']])
+            await store.sql_update_some_balances([user_from['balance_wallet_address']])
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
             await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` with paymentid.')
             await ctx.message.author.send(
@@ -1086,11 +1086,11 @@ async def send(ctx, amount: str, CoinAddress: str):
         #print('Process normal address...')
         tip = None
         try:
-            tip = store.sql_send_tip_Ex(str(ctx.message.author.id), CoinAddress, real_amount, "SEND")
+            tip = await store.sql_send_tip_Ex(str(ctx.message.author.id), CoinAddress, real_amount, "SEND")
         except Exception as e:
             print(e)        
         if tip:
-            store.sql_update_some_balances([user_from['balance_wallet_address']])
+            await store.sql_update_some_balances([user_from['balance_wallet_address']])
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
             await botLogChan.send(f'A user successfully executed `.send {real_amount / COIN_DIGITS:,.2f} {COIN_REPR}` without paymentid.')
             await ctx.message.author.send(
@@ -1255,8 +1255,9 @@ async def stats(ctx):
     # End Check if maintenance
 
     gettopblock = await daemonrpc_client.gettopblock()
-    #print(gettopblock)
-    walletStatus = daemonrpc_client.getWalletStatus()
+    print(gettopblock)
+    walletStatus = await daemonrpc_client.getWalletStatus()
+    print(walletStatus)
     if gettopblock:
         blockfound = datetime.utcfromtimestamp(int(gettopblock['block_header']['timestamp'])).strftime("%Y-%m-%d %H:%M:%S")
         ago = str(timeago.format(blockfound, datetime.utcnow()))

@@ -1,7 +1,9 @@
 from typing import Dict
 from uuid import uuid4
 
-import requests
+import aiohttp
+import asyncio
+import json
 
 import sys
 sys.path.append("..")
@@ -12,38 +14,35 @@ class RPCException(Exception):
         super(RPCException, self).__init__(message)
 
 
-def call_method(method_name: str, payload: Dict = None) -> Dict:
+async def call_method(method_name: str, payload: Dict = None) -> Dict:
+    url = f'http://{config.wallet.host}:{config.wallet.port}/json_rpc'
     full_payload = {
         'params': payload or {},
         'jsonrpc': '2.0',
         'id': str(uuid4()),
         'method': f'{method_name}'
     }
-    resp = requests.post(
-        f'http://{config.wallet.host}:{config.wallet.port}/json_rpc',
-        json=full_payload, timeout=15.0)
-    resp.raise_for_status()
-    json_resp = resp.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    return resp.json().get('result', {})
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=full_payload, timeout=10) as response:
+            res_data = await response.read()
+            res_data = res_data.decode('utf-8')
+            await session.close()
+            decoded_data = json.loads(res_data)
+            return decoded_data['result']
 
 
-def call_method_sendwithdraw(method_name: str, payload: Dict = None) -> Dict:
+async def call_method_sendwithdraw(method_name: str, payload: Dict = None) -> Dict:
+    url = f'http://{config.withdrawwallet.host}:{config.withdrawwallet.port}/json_rpc'
     full_payload = {
         'params': payload or {},
         'jsonrpc': '2.0',
         'id': str(uuid4()),
         'method': f'{method_name}'
     }
-    resp = requests.post(
-        f'http://{config.withdrawwallet.host}:{config.withdrawwallet.port}/json_rpc',
-        json=full_payload, timeout=10.0)
-    resp.raise_for_status()
-    json_resp = resp.json()
-    if 'error' in json_resp:
-        raise RPCException(json_resp['error'])
-    return resp.json().get('result', {})
-
-
-
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=full_payload, timeout=10) as response:
+            res_data = await response.read()
+            res_data = res_data.decode('utf-8')
+            await session.close()
+            decoded_data = json.loads(res_data)
+            return decoded_data['result']

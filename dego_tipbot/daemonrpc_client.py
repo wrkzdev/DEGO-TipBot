@@ -2,7 +2,7 @@ from typing import Dict
 from uuid import uuid4
 
 import rpc_client
-import requests, json
+import json
 import aiohttp
 import asyncio
 
@@ -13,6 +13,7 @@ from config import config
 class RPCException(Exception):
     def __init__(self, message):
         super(RPCException, self).__init__(message)
+
 
 async def call_method(method_name: str, payload: Dict = None) -> Dict:
     url = f'http://{config.daemon.host}:{config.daemon.port}/json_rpc'
@@ -44,7 +45,5 @@ async def gettopblock():
             return res_data['result']
 
 
-def getWalletStatus():
-    result = rpc_client.call_method('getStatus')
-    return result
-
+async def getWalletStatus():
+    return await rpc_client.call_method('getStatus')
