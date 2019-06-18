@@ -44,8 +44,6 @@ wallet_balance_update_interval: 120
 # Flood tip limit per 10 seconds
 floodTip: 8
 floodTipDuration: 10
-# Number of retry TX before issue it is fail
-TxRetry: 3
 ## maintenance
 maintenance: 0
 maintenance_msg: "Bot under maintance."

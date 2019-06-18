@@ -37,15 +37,11 @@ async def send_transaction(to_address: str, amount: int) -> str:
         'fee': config.tx_fee,
         'anonymity': config.withdrawwallet.mixin
     }
-    retry = config.TxRetry
     result = None
-    while retry > 0:
-        result = await rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
-        if result:
-            if 'transactionHash' in result:
-                break
-        retry = retry - 1
-    return result['transactionHash']
+    result = await rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
+    if result:
+        return result['transactionHash']
+    return result
 
 
 async def send_transaction_id(to_address: str, amount: int, paymentid: str) -> str:
@@ -59,15 +55,11 @@ async def send_transaction_id(to_address: str, amount: int, paymentid: str) -> s
         'anonymity': config.withdrawwallet.mixin,
         'paymentId': paymentid
     }
-    retry = config.TxRetry
     result = None
-    while retry > 0:
-        result = await rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
-        if result:
-            if 'transactionHash' in result:
-                break
-        retry = retry - 1
-    return result['transactionHash']
+    result = await rpc_client.call_method_sendwithdraw('sendTransaction', payload=payload)
+    if result:
+        return result['transactionHash']
+    return result
 
 
 async def get_all_balances_all() -> Dict[str, Dict]:

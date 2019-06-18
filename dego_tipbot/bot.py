@@ -1255,9 +1255,9 @@ async def stats(ctx):
     # End Check if maintenance
 
     gettopblock = await daemonrpc_client.gettopblock()
-    print(gettopblock)
+    #print(gettopblock)
     walletStatus = await daemonrpc_client.getWalletStatus()
-    print(walletStatus)
+    #print(walletStatus)
     if gettopblock:
         blockfound = datetime.utcfromtimestamp(int(gettopblock['block_header']['timestamp'])).strftime("%Y-%m-%d %H:%M:%S")
         ago = str(timeago.format(blockfound, datetime.utcnow()))
