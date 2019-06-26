@@ -14,9 +14,8 @@ async def register() -> str:
     reg_address = {}
     reg_address['address'] = result['address']
     reg_address['privateSpendKey'] = getSpendKey(result['address'])
-    ## Avoid any crash and nothing to restore or import
+    # Avoid any crash and nothing to restore or import
     print('Wallet register: '+reg_address['address']+'=>privateSpendKey: '+reg_address['privateSpendKey'])
-    ## End print log ID,spendkey to log file
     return reg_address
 
 async def getSpendKey(from_address: str) -> str:

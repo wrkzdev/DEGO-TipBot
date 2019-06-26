@@ -13,7 +13,7 @@ import asyncio
 import pymysql
 conn = None
 
-## OpenConnection
+# OpenConnection
 def openConnection():
     global conn
     try:
@@ -78,7 +78,7 @@ async def sql_register_user(userID):
                        print('Can not reach wallet-api during sql_register_user')
                        chainHeight = 0
                    else:
-                       chainHeight = int(walletStatus['blockCount']) ## reserve 20
+                       chainHeight = int(walletStatus['blockCount']) # reserve 20
                    sql = """ INSERT INTO dego_user (`user_id`, `balance_wallet_address`, `balance_wallet_address_ts`, `balance_wallet_address_ch`, `privateSpendKey`) 
                              VALUES (%s, %s, %s, %s, %s) """
                    cur.execute(sql, (str(userID), balance_address['address'], int(time.time()), chainHeight, balance_address['privateSpendKey'], ))
