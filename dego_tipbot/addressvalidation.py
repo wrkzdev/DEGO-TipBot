@@ -1,4 +1,4 @@
-## For random paymentid
+# For random paymentid
 import secrets, sha3
 import sys, re
 from binascii import hexlify, unhexlify
@@ -33,7 +33,7 @@ def public_from_int(i):
 def public_from_secret(sk):
     return public_from_int(_hexStrToInt(sk)).decode('utf-8')
 
-### base58
+## base58
 # MoneroPy - A python toolbox for Monero
 # Copyright (C) 2016 The MoneroPy Developers.
 #
@@ -233,13 +233,14 @@ def varint_encode(number):
             break
     return buf
 
-## Validate address:
+
+# Validate address:
 def validate_address(wallet_address):
     prefix = config.coin.prefix
     prefix_hex = varint_encode(prefix).hex()
     prefix_char = config.coin.prefixChar
     remain_length = int(config.coin.AddrLen) - len(prefix_char)
-    my_regex = r""+prefix_char+r"[a-zA-Z0-9]"+r"{"+str(remain_length)+",}"
+    my_regex = r"" + prefix_char + r"[a-zA-Z0-9]" + r"{" + str(remain_length) + ",}"
     if len(wallet_address) != int(config.coin.AddrLen):
         return None
     if not re.match(my_regex, wallet_address.strip()):
@@ -263,22 +264,22 @@ def validate_address(wallet_address):
         return None
         pass
 
-## Validate address:
+# Validate address:
 def validate_integrated(wallet_address):
     prefix = config.coin.prefix
     prefix_hex = varint_encode(prefix).hex()
     int_address_len = int(config.coin.IntAddrLen)
     prefix_char = config.coin.prefixChar
     remain_length = int_address_len - len(prefix_char)
-    my_regex = r""+prefix_char+r"[a-zA-Z0-9]"+r"{"+str(remain_length)+",}"
+    my_regex = r"" + prefix_char + r"[a-zA-Z0-9]" + r"{" + str(remain_length) + ",}"
     if len(wallet_address) != int(config.coin.IntAddrLen):
         return None
     if not re.match(my_regex, wallet_address.strip()):
         return None
     try:
         address_hex = decode(wallet_address)
-        if(address_hex.startswith(prefix_hex)):
-            i=len(prefix_hex)-1
+        if address_hex.startswith(prefix_hex):
+            i = len(prefix_hex) - 1
             address_no_prefix = address_hex[i:]
             integrated_id = address_no_prefix[1:129]
             spend = address_no_prefix[(128+1):(128+65)]
@@ -287,23 +288,24 @@ def validate_integrated(wallet_address):
             expectedChecksum = cn_fast_hash(prefix_hex+integrated_id+spend + view)[0:8]
             if checksum == expectedChecksum:
                 checksum = cn_fast_hash(prefix_hex + spend + view);
-                address_b58=encode(prefix_hex+spend+view + checksum[0:8])
+                address_b58 = encode(prefix_hex+spend+view + checksum[0:8])
                 result = {}
-                result['address']=str(address_b58)
-                result['integrated_id']=str(hextostr(integrated_id))
+                result['address'] = str(address_b58)
+                result['integrated_id'] = str(hextostr(integrated_id))
             else:
                 return 'invalid'
     except Exception as e:
         return None
     return result
 
-## make_integrated address:
+
+# make_integrated address:
 def make_integrated(wallet_address, integrated_id=None):
     prefix = config.coin.prefix
     prefix_hex = varint_encode(prefix).hex()
     prefix_char = config.coin.prefixChar
     remain_length = int(config.coin.AddrLen) - len(prefix_char)
-    my_regex = r""+prefix_char+r"[a-zA-Z0-9]"+r"{"+str(remain_length)+",}"
+    my_regex = r"" + prefix_char + r"[a-zA-Z0-9]" + r"{" + str(remain_length) + ",}"
     if integrated_id is None:
         integrated_id = paymentid()
     if len(wallet_address) != int(config.coin.AddrLen):
@@ -317,7 +319,7 @@ def make_integrated(wallet_address, integrated_id=None):
         checkPaymentID = integrated_id
         integrated_id = integrated_id.encode('latin-1').hex()
         if address_hex.startswith(prefix_hex):
-            i = len(prefix_hex)-1
+            i = len(prefix_hex) - 1
             address_no_prefix = address_hex[i:]
             spend = address_no_prefix[1:65]
             view = address_no_prefix[65:129]
@@ -325,9 +327,9 @@ def make_integrated(wallet_address, integrated_id=None):
             address = (prefix_hex + integrated_id + spend + view + expectedChecksum)
             address = str(encode(address))
             result = {}
-            result['address']=wallet_address
-            result['paymentid']=checkPaymentID
-            result['integrated_address']=address
+            result['address'] = wallet_address
+            result['paymentid'] = checkPaymentID
+            result['integrated_address'] = address
             return result
         else:
             return None
@@ -335,7 +337,8 @@ def make_integrated(wallet_address, integrated_id=None):
         return None
         pass
 
-## make random paymentid:
+
+# make random paymentid:
 def paymentid(length=None):
     length = 32
     return secrets.token_hex(length) 
@@ -347,4 +350,5 @@ def hextostr(hex):
     for i in h2b:
         res = res + chr(i)
     return res
+
 ##########
