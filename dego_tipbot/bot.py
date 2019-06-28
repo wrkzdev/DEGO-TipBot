@@ -637,7 +637,7 @@ async def tip(ctx, amount: str, *args):
                 if time_given:
                     if time_given < 5*60 or time_given > 5*365*24*60*60:
                         await ctx.message.add_reaction(EMOJI_ERROR)
-                        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Please try time inteval between 5 minutes to 5 years.')
+                        await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Please try time inteval between 5minutes to 5years.')
                         return
                     else:
                         message_talker = store.sql_get_messages(str(ctx.message.guild.id), str(ctx.message.channel.id), time_given)
