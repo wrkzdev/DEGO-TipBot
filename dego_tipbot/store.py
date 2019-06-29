@@ -4,6 +4,13 @@ import time
 import json
 
 import sys
+# Encrypt
+import base64
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.fernet import Fernet
+
 sys.path.append("..")
 import wallet, daemonrpc_client
 from config import config
@@ -74,14 +81,14 @@ async def sql_register_user(userID):
                    return
                 else:
                    walletStatus = daemonrpc_client.getWalletStatus()
-                   if (walletStatus is None):
+                   if walletStatus is None:
                        print('Can not reach wallet-api during sql_register_user')
                        chainHeight = 0
                    else:
                        chainHeight = int(walletStatus['blockCount']) # reserve 20
                    sql = """ INSERT INTO dego_user (`user_id`, `balance_wallet_address`, `balance_wallet_address_ts`, `balance_wallet_address_ch`, `privateSpendKey`) 
                              VALUES (%s, %s, %s, %s, %s) """
-                   cur.execute(sql, (str(userID), balance_address['address'], int(time.time()), chainHeight, balance_address['privateSpendKey'], ))
+                   cur.execute(sql, (str(userID), balance_address['address'], int(time.time()), chainHeight, encrypt_string(balance_address['privateSpendKey']), ))
                    conn.commit()
                    result2 = {}
                    result2['balance_wallet_address'] = balance_address
@@ -109,7 +116,7 @@ async def sql_update_user(userID, user_wallet_address):
             result = cur.fetchone()
             if result is None:
                 balance_address = await wallet.register()
-                if (balance_address is None):
+                if balance_address is None:
                    print('Internal error during call register wallet-api')
                    return
             else:
@@ -518,3 +525,43 @@ def sql_toggle_tipnotify(user_id: str, onoff: str):
             print(e)
         finally:
             conn.close()
+
+
+# Steal from https://nitratine.net/blog/post/encryption-and-decryption-in-python/
+def encrypt_string(to_encrypt: str):
+    password_provided = config.encrypt.password # This is input in the form of a string
+    password = password_provided.encode() # Convert to type bytes
+    salt = (config.encrypt.salt).encode('utf-8') # CHANGE THIS - recommend using a key from os.urandom(16), must be of type bytes
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(password)) # Can only use kdf once
+
+    # Encrypt
+    message = to_encrypt.encode()
+    f = Fernet(key)
+    encrypted = f.encrypt(message)
+    return encrypted.decode("utf-8")
+
+
+def decrypt_string(decrypted: str):
+    password_provided = config.encrypt.password # This is input in the form of a string
+    password = password_provided.encode() # Convert to type bytes
+    salt = (config.encrypt.salt).encode('utf-8') # CHANGE THIS - recommend using a key from os.urandom(16), must be of type bytes
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(password)) # Can only use kdf once
+
+    # Decrypt
+    f = Fernet(key)
+    decrypted = f.decrypt(decrypted.encode('utf-8'))
+    return decrypted.decode("utf-8")

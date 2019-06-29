@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 config.yml
+dego_tipbot/_priv/
 
 # C extensions
 *.so

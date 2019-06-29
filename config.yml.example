@@ -47,4 +47,7 @@ floodTipDuration: 10
 ## maintenance
 maintenance: 0
 maintenance_msg: "Bot under maintance."
-
+# Encrypting keys, salt recommend using a key from os.urandom(16)
+encrypt:
+  password: "YourEncryptedpassword"
+  salt: "salt_key_here"
