@@ -13,7 +13,7 @@ async def register() -> str:
     result = await rpc_client.call_method('createAddress')
     reg_address = {}
     reg_address['address'] = result['address']
-    reg_address['privateSpendKey'] = getSpendKey(result['address'])
+    reg_address['privateSpendKey'] = await getSpendKey(result['address'])
     # Avoid any crash and nothing to restore or import
     print('Wallet register: '+reg_address['address']+'=>privateSpendKey: '+reg_address['privateSpendKey'])
     return reg_address

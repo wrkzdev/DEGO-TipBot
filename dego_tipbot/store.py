@@ -76,7 +76,7 @@ async def sql_register_user(userID):
                    print('Internal error during call register wallet-api')
                    return
                 else:
-                   walletStatus = daemonrpc_client.getWalletStatus()
+                   walletStatus = await daemonrpc_client.getWalletStatus()
                    if walletStatus is None:
                        print('Can not reach wallet-api during sql_register_user')
                        chainHeight = 0
