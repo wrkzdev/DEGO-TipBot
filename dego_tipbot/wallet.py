@@ -7,6 +7,7 @@ import rpc_client
 import requests
 from config import config
 import asyncio
+import time
 
 
 async def register() -> str:
@@ -116,3 +117,17 @@ def wallet_optimize_single(subaddress: str, threshold: int) -> int:
             print("Fusion Error: " + str(e))
             break
     return i
+
+
+async def rpc_wallet_save():
+    start = time.time()
+    result = await rpc_client.call_method('save')
+    end = time.time()
+    return float(end - start)
+
+
+async def rpc_wallet_hotwallet_save():
+    start = time.time()
+    result = await rpc_client.call_method_sendwithdraw('save')
+    end = time.time()
+    return float(end - start)

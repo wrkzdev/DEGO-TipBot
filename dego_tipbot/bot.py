@@ -10,6 +10,7 @@ import sys
 sys.path.append("..")
 import store, daemonrpc_client, addressvalidation
 from config import config
+from wallet import rpc_wallet_save, rpc_wallet_hotwallet_save
 
 # regex
 import re
@@ -24,6 +25,7 @@ import asyncio
 # CapEtn: 386761001808166912
 # Need to put some
 MAINTENANCE_OWNER = [ 386761001808166912 ] # list owner
+OWNER_ID_TIPBOT = 386761001808166912
 IS_MAINTENANCE = int(config.maintenance)
 ENABLE_WITHSEND = int(config.withdrawsend)
 IGNORE_TIP_SERVER = [ 460755304863498250 ]
@@ -67,7 +69,7 @@ bot_help_stats = f"Show summary {COIN_REPR}: height, difficulty, etc."
 bot_help_tag = "Display a description or a link about what it is. (-add|-del) requires permission `manage_channels`"
 bot_help_notifytip = "Toggle notify tip notification from bot ON|OFF"
 
-bot = AutoShardedBot(command_prefix='.', case_insensitive=True, dm_help = True, dm_help_threshold = 100)
+bot = AutoShardedBot(command_prefix='.', case_insensitive=True, owner_id = OWNER_ID_TIPBOT, dm_help = True, dm_help_threshold = 100)
 
 @bot.event
 async def on_ready():
@@ -125,6 +127,50 @@ async def on_message(message):
     # Do not remove this, otherwise, command not working.
     ctx = await bot.get_context(message)
     await bot.invoke(ctx)
+
+
+@bot.group(hidden = True)
+@commands.is_owner()
+async def admin(ctx):
+    if ctx.invoked_subcommand is None:
+        await ctx.send('Invalid `admin` command passed...')
+    return
+
+
+@commands.is_owner()
+@admin.command(hidden = True)
+async def save(ctx):
+    botLogChan = bot.get_channel(id=LOG_CHAN)
+    await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} called `save`')
+
+    try:
+        duration_hotwallet = await rpc_wallet_hotwallet_save()
+    except Exception as e:
+        print(e)
+    if duration_hotwallet:
+        await ctx.send(f'`save` hot wallet took {round(duration_hotwallet,3)}s.')
+    else:
+        await ctx.send('`save` hot wallet calling error.')
+
+    try:
+        duration_wallet = await rpc_wallet_save()
+    except Exception as e:
+        print(e)
+
+    if duration_wallet:
+        await ctx.send(f'`save` took {round(duration_wallet,3)}s.')
+    else:
+        await ctx.send('`save` calling error.')
+    return
+
+
+@commands.is_owner()
+@admin.command(pass_context=True, name='shutdown', aliases=['restart'])
+async def shutdown(ctx):
+    botLogChan = bot.get_channel(id=LOG_CHAN)
+    await ctx.send(f'{EMOJI_REFRESH} {ctx.author.mention} .. restarting .. back soon.')
+    await botLogChan.send(f'{EMOJI_REFRESH} {ctx.message.author.name} / {ctx.message.author.id} called `restart`. I will be back soon hopefully.')
+    await bot.logout()
 
 
 @bot.command(pass_context=True, name='info', aliases=['wallet', 'tipjar'], help=bot_help_info)

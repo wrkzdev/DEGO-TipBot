@@ -15,6 +15,9 @@ class RPCException(Exception):
 
 
 async def call_method(method_name: str, payload: Dict = None) -> Dict:
+    timeout_to = 10
+    if method_name.lower() == "save":
+        timeout_to = 1200
     url = f'http://{config.wallet.host}:{config.wallet.port}/json_rpc'
     full_payload = {
         'params': payload or {},
@@ -23,7 +26,7 @@ async def call_method(method_name: str, payload: Dict = None) -> Dict:
         'method': f'{method_name}'
     }
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=full_payload, timeout=10) as response:
+        async with session.post(url, json=full_payload, timeout=timeout_to) as response:
             res_data = await response.read()
             res_data = res_data.decode('utf-8')
             await session.close()
@@ -31,7 +34,11 @@ async def call_method(method_name: str, payload: Dict = None) -> Dict:
             return decoded_data['result']
 
 
+
 async def call_method_sendwithdraw(method_name: str, payload: Dict = None) -> Dict:
+    timeout_to = 10
+    if method_name.lower() == "save":
+        timeout_to = 1200
     url = f'http://{config.withdrawwallet.host}:{config.withdrawwallet.port}/json_rpc'
     full_payload = {
         'params': payload or {},
@@ -40,7 +47,7 @@ async def call_method_sendwithdraw(method_name: str, payload: Dict = None) -> Di
         'method': f'{method_name}'
     }
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=full_payload, timeout=10) as response:
+        async with session.post(url, json=full_payload, timeout=timeout_to) as response:
             res_data = await response.read()
             res_data = res_data.decode('utf-8')
             await session.close()
