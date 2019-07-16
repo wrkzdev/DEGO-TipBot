@@ -305,7 +305,7 @@ def sql_adjust_balance(userID: str):
 async def sql_send_tip_Ex(user_from: str, address_to: str, amount: int, txtype: str):
     if txtype.upper() not in ["SEND", "WITHDRAW"]:
         return None
-    user_from_wallet = sql_get_userwallet(user_from)
+    user_from_wallet = await sql_get_userwallet(user_from)
     tx_hash = None
     if 'balance_wallet_address' in user_from_wallet:
         tx_hash = await wallet.send_transaction(address_to, amount)
@@ -328,7 +328,7 @@ async def sql_send_tip_Ex(user_from: str, address_to: str, amount: int, txtype: 
 async def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, paymentid: str, txtype: str):
     if txtype.upper() not in ["SEND", "WITHDRAW"]:
         return None
-    user_from_wallet = sql_get_userwallet(user_from)
+    user_from_wallet = await sql_get_userwallet(user_from)
     tx_hash = None
     if 'balance_wallet_address' in user_from_wallet:
         tx_hash = await wallet.send_transaction_id(address_to, amount, paymentid)
