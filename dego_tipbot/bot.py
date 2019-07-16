@@ -50,6 +50,7 @@ EMOJI_SPEAK = "\U0001F4AC"
 EMOJI_STOPSIGN = "\U0001F6D1"
 EMOJI_PURSE = "\U0001F45B"
 EMOJI_HOURGLASS = "\u231B"
+EMOJI_OK_BOX = "\U0001F197"
 
 NOTIFICATION_OFF_CMD = 'Type: `.notifytip off` to turn off this DM notification.'
 
@@ -87,6 +88,19 @@ async def on_ready():
 @bot.event
 async def on_shard_ready(shard_id):
     print(f'Shard {shard_id} connected')
+
+
+@bot.event
+async def on_reaction_add(reaction, user):
+    # If bot re-act, ignore.
+    if user.id == bot.user.id:
+        return
+    # If other people beside bot react.
+    else:
+        # If re-action is OK box and message author is bot itself
+        if reaction.emoji == EMOJI_OK_BOX and reaction.message.author.id == bot.user.id:
+            await reaction.message.delete()
+        return
 
 
 @bot.event
@@ -187,23 +201,26 @@ async def info(ctx):
         pass
     # End Check if maintenance
 
-    user = await store.sql_register_user(str(ctx.message.author.id))
-    wallet = store.sql_get_userwallet(str(ctx.message.author.id))
+    wallet = await store.sql_get_userwallet(str(ctx.message.author.id))
     if wallet is None:
-        await ctx.message.author.send('Internal Error for `.info`')
+        userreg = await store.sql_register_user(str(ctx.message.author.id))
+        wallet = await store.sql_get_userwallet(str(ctx.message.author.id))
+    if wallet is None:
+        await ctx.message.author.send(f'{ctx.author.mention} Internal Error for `.info`')
         return
     if 'user_wallet_address' in wallet:
         await ctx.message.add_reaction(EMOJI_TICK)
-        await ctx.message.author.send(
+        msg =  await ctx.message.author.send(
             f'**[ACCOUNT INFO]**\n\n'
             f'{EMOJI_PURSE} Deposit Address: `'+wallet['balance_wallet_address']+'`\n'
             f'{EMOJI_MONEYBAG} Registered Wallet: `'+wallet['user_wallet_address']+'`')
     else:
         await ctx.message.add_reaction(EMOJI_WARNING)
-        await ctx.message.author.send(
+        msg =  await ctx.message.author.send(
             f'**[ACCOUNT INFO]**\n\n'
             f'{EMOJI_PURSE} Deposit Address: `'+wallet['balance_wallet_address']+'`\n'
             f'{EMOJI_MONEYBAG} Registered Wallet: `NONE, Please register.`\n')
+    await msg.add_reaction(EMOJI_OK_BOX)
     return
 
 
@@ -246,9 +263,13 @@ async def balance(ctx):
             pass
     # End of wallet status
 
-    user = await store.sql_register_user(str(ctx.message.author.id))
+    
+    wallet = await store.sql_get_userwallet(str(ctx.message.author.id))
+    if wallet is None:
+        userreg = await store.sql_register_user(str(ctx.message.author.id))
+        wallet = await store.sql_get_userwallet(str(ctx.message.author.id))
+
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
-    wallet = store.sql_get_userwallet(ctx.message.author.id)
     if 'lastUpdate' in wallet:
         await ctx.message.add_reaction(EMOJI_TICK)
         try:
@@ -283,13 +304,15 @@ async def botbalance(ctx, member: discord.Member=None):
     # End Check if maintenance
 
     if member is None:
-        user = await store.sql_register_user(str(bot.user.id))
-        wallet = store.sql_get_userwallet(bot.user.id)
+        wallet = await store.sql_get_userwallet(str(bot.user.id))
+        if wallet is None:
+            userreg = await store.sql_register_user(str(bot.user.id))
+            wallet = await store.sql_get_userwallet(str(bot.user.id))
         userdata_balance = store.sql_adjust_balance(str(bot.user.id))
         depositAddress = wallet['balance_wallet_address']
         balance_actual = '{:,.2f}'.format((wallet['actual_balance']+int(userdata_balance['Adjust'])) / COIN_DIGITS)
         balance_locked = '{:,.2f}'.format(wallet['locked_balance'] / COIN_DIGITS)
-        await ctx.send(
+        msg = await ctx.send(
             f'**[MY BALANCE]**\n\n'
             f'{EMOJI_PURSE} Deposit Address: `{depositAddress}`\n'
             f'{EMOJI_MONEYBAG} Available: {balance_actual} '
@@ -297,26 +320,30 @@ async def botbalance(ctx, member: discord.Member=None):
             f'{EMOJI_HOURGLASS} Pending: {balance_locked} '
             f'{COIN_REPR}\n'
             '**This is bot\'s tipjar address. Do not deposit here unless you want to deposit to this bot.**')
+        await msg.add_reaction(EMOJI_OK_BOX)
         return
     if member.bot == False:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await bctx.message.author.send('Only for bot!!')
+        await bctx.message.author.send(f'{ctx.author.mention} Only for bot!!')
         return
     else:
-        user = await store.sql_register_user(str(member.id))
-        wallet = store.sql_get_userwallet(member.id)
+        wallet = await store.sql_get_userwallet(str(member.id))
+        if wallet is None:
+            userreg = await store.sql_register_user(str(member.id))
+            wallet = await store.sql_get_userwallet(str(member.id))
         userdata_balance = store.sql_adjust_balance(str(member.id))
         balance_actual = '{:,.2f}'.format((wallet['actual_balance']+int(userdata_balance['Adjust'])) / COIN_DIGITS)
         balance_locked = '{:,.2f}'.format(wallet['locked_balance'] / COIN_DIGITS)
         depositAddress = wallet['balance_wallet_address']
-        await ctx.send(
-            f'**[INFO BOT {member.name}\'s BALANCE]**\n\n'
+        msg = await ctx.send(
+            f'**[INFO BOT {str(member)}\'s BALANCE]**\n\n'
             f'{EMOJI_PURSE} Deposit Address: `{depositAddress}`\n'
             f'{EMOJI_MONEYBAG} Available: {balance_actual} '
             f'{COIN_REPR}\n'
             f'{EMOJI_HOURGLASS} Pending: {balance_locked} '
             f'{COIN_REPR}\n'
             '**This is bot\'s tipjar address. Do not deposit here unless you want to deposit to this bot.**')
+        await msg.add_reaction(EMOJI_OK_BOX)
         return
 
 
@@ -335,7 +362,7 @@ async def register(ctx, wallet_address: str):
     # End Check if maintenance
 
     user_id = ctx.message.author.id
-    user = store.sql_get_userwallet(ctx.message.author.id)
+    user = await store.sql_get_userwallet(str(ctx.message.author.id))
     if user:
         existing_user = user
         pass
@@ -440,7 +467,7 @@ async def withdraw(ctx, amount: str):
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Invalid amount.')
         return
 
-    user = store.sql_get_userwallet(str(ctx.message.author.id))
+    user = await store.sql_get_userwallet(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
     real_amount = int(amount * COIN_DIGITS)
 
@@ -543,7 +570,7 @@ async def donate(ctx, amount: str):
         return
 
     real_amount = int(amount * COIN_DIGITS)
-    user_from = store.sql_get_userwallet(ctx.message.author.id)
+    user_from = await store.sql_get_userwallet(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
 
     if real_amount > user_from['actual_balance'] + int(userdata_balance['Adjust']):
@@ -599,7 +626,7 @@ async def donate(ctx, amount: str):
 async def notifytip(ctx, onoff: str):
     if onoff.upper() not in ["ON", "OFF"]:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.send('You need to use only `ON` or `OFF`.')
+        await ctx.send(f'{ctx.author.mention} You need to use only `ON` or `OFF`.')
         return
 
     onoff = onoff.upper()
@@ -607,18 +634,18 @@ async def notifytip(ctx, onoff: str):
     if onoff == "ON":
         if str(ctx.message.author.id) in notifyList:
             store.sql_toggle_tipnotify(str(ctx.message.author.id), "ON")
-            await ctx.send('OK, you will get all notification when tip.')
+            await ctx.send(f'{ctx.author.mention} OK, you will get all notification when tip.')
             return
         else:
             await ctx.send('You already have notification ON by default.')
             return
     elif onoff == "OFF":
         if str(ctx.message.author.id) in notifyList:
-            await ctx.send('You already have notification OFF.')
+            await ctx.send(f'{ctx.author.mention} You already have notification OFF.')
             return
         else:
             store.sql_toggle_tipnotify(str(ctx.message.author.id), "OFF")
-            await ctx.send('OK, you will not get any notification when anyone tips.')
+            await ctx.send(f'{ctx.author.mention} OK, you will not get any notification when anyone tips.')
             return
 
 
@@ -695,10 +722,10 @@ async def tip(ctx, amount: str, *args):
                             await _tip_talker(ctx, amount, message_talker)
                             return
             else:
-                await ctx.send(f'{EMOJI_RED_NO} You need at least one person to tip to.')
+                await ctx.send(f'{EMOJI_RED_NO} {ctx.author.mention} You need at least one person to tip to.')
                 return
         else:
-            await ctx.send(f'{EMOJI_RED_NO} You need at least one person to tip to.')
+            await ctx.send(f'{EMOJI_RED_NO} {ctx.author.mention} You need at least one person to tip to.')
             return
     elif len(ctx.message.mentions) > 1:
         await _tip(ctx, amount)
@@ -706,9 +733,12 @@ async def tip(ctx, amount: str, *args):
     elif len(ctx.message.mentions) == 1:
         member = ctx.message.mentions[0]
 
-    user_from = store.sql_get_userwallet(ctx.message.author.id)
+    user_from = await store.sql_get_userwallet(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
-    user_to = await store.sql_register_user(member.id)
+    user_to = await store.sql_get_userwallet(str(member.id))
+    if user_to is None:
+        userreg = await store.sql_register_user(str(member.id))
+        user_to = await store.sql_get_userwallet(str(member.id))
 
     try:
         amount = float(amount)
@@ -828,7 +858,7 @@ async def tipall(ctx, amount: str):
                        f'{COIN_REPR} for each member. You need at least {len(memids) * config.min_mv_amount:,.2f} {COIN_REPR}.')
         return
 
-    user_from = store.sql_get_userwallet(str(ctx.message.author.id))
+    user_from = await store.sql_get_userwallet(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
     if real_amount > user_from['actual_balance'] + int(userdata_balance['Adjust']):
         await ctx.message.add_reaction(EMOJI_ERROR)
@@ -1033,7 +1063,7 @@ async def send(ctx, amount: str, CoinAddress: str):
 
     real_amount = int(amount * COIN_DIGITS)
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
-    user_from = store.sql_get_userwallet(ctx.message.author.id)
+    user_from = await store.sql_get_userwallet(str(ctx.message.author.id))
     if user_from['balance_wallet_address'] == CoinAddress:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.message.author.send(
@@ -1140,12 +1170,13 @@ async def send(ctx, amount: str, CoinAddress: str):
 async def address(ctx, *args):
     if len(args) == 0:
         await ctx.message.add_reaction(EMOJI_TICK)
-        await ctx.send('**[ ADDRESS CHECKING EXAMPLES ]**\n\n'
+        msg = await ctx.send('**[ ADDRESS CHECKING EXAMPLES ]**\n\n'
                         '`.address dg4v9ZRhAbY94UZ9D5URmHcdTvSBvmoxrLRoN7ERJFXTh6VGw3giAL3Ke5vDX65UHaJj2aWXZSsxmCnYraBwAc3M323oeCrSX`\n'
                         'That will check if the address is valid. Integrated address is also supported. '
                         'If integrated address is input, bot will tell you the result of :address + paymentid\n\n'
                         '`.address <coin_address> <paymentid>`\n'
                         'This will generate an integrate address.\n\n')
+        await msg.add_reaction(EMOJI_OK_BOX)
         return
     if len(args) == 1:
         CoinAddress=args[0]
@@ -1242,22 +1273,25 @@ async def address(ctx, *args):
         if 'integrated_address' in integrated_address:
             iCoinAddress = integrated_address['integrated_address']
             await ctx.message.add_reaction(EMOJI_TICK)
-            await ctx.send(f'\nNew integrated address: `{iCoinAddress}`\n\n'
+            msg = await ctx.send(f'\nNew integrated address: `{iCoinAddress}`\n\n'
                             f'Main address: `{CoinAddress}`\n'
                             f'Payment ID: `{paymentid}`\n')
+            await msg.add_reaction(EMOJI_OK_BOX)
             return
         else:
             await ctx.message.add_reaction(EMOJI_ERROR)
-            await ctx.send(f'{EMOJI_STOPSIGN} ERROR Can not make integrated address.\n')
+            msg = await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} ERROR Can not make integrated address.\n')
+            await msg.add_reaction(EMOJI_OK_BOX)
             return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
-        await ctx.send('**[ ADDRESS CHECKING EXAMPLES ]**\n\n'
+        msg = await ctx.send('**[ ADDRESS CHECKING EXAMPLES ]**\n\n'
                        f'`.address {config.coin.DonateAddress}`\n'
                        'That will check if the address is valid. Integrated address is also supported. '
                        'If integrated address is input, bot will tell you the result of :address + paymentid\n\n'
                        '`.address <coin_address> <paymentid>`\n'
                        'This will generate an integrate address.\n\n')
+        await msg.add_reaction(EMOJI_OK_BOX)
         return
 
 
@@ -1265,8 +1299,9 @@ async def address(ctx, *args):
 async def paymentid(ctx):
     paymentid = addressvalidation.paymentid()
     await ctx.message.add_reaction(EMOJI_TICK)
-    await ctx.send('**[ RANDOM PAYMENT ID ]**\n'
+    msg = await ctx.send('**[ RANDOM PAYMENT ID ]**\n'
                     f'`{paymentid}`\n')
+    await msg.add_reaction(EMOJI_OK_BOX)
     return
 
 
@@ -1294,12 +1329,13 @@ async def stats(ctx):
         height = "{:,}".format(gettopblock['block_header']['height'])
         reward = "{:,}".format(int(gettopblock['block_header']['reward'])/int(config.coin.decimal))
         if walletStatus is None:
-            await ctx.send('**[ DEROGOLD ]**\n'
+            msg = await ctx.send('**[ DEROGOLD ]**\n'
                             f'```[NETWORK HEIGHT] {height}\n'
                             f'[TIME]           {ago}\n'
                             f'[DIFFICULTY]     {difficulty}\n'
                             f'[BLOCK REWARD]   {reward}{COIN_REPR}\n'
                             f'[NETWORK HASH]   {hashrate}\n```')
+            await msg.add_reaction(EMOJI_OK_BOX)
             return
         else:
             localDaemonBlockCount = int(walletStatus['blockCount'])
@@ -1307,7 +1343,7 @@ async def stats(ctx):
             t_percent = '{:,.2f}'.format(truncate(localDaemonBlockCount/networkBlockCount*100,2))
             t_localDaemonBlockCount = '{:,}'.format(localDaemonBlockCount)
             t_networkBlockCount = '{:,}'.format(networkBlockCount)
-            await ctx.send('**[ DEROGOLD ]**\n'
+            msg = await ctx.send('**[ DEROGOLD ]**\n'
                             f'```[NETWORK HEIGHT] {height}\n'
                             f'[TIME]           {ago}\n'
                             f'[DIFFICULTY]     {difficulty}\n'
@@ -1315,9 +1351,11 @@ async def stats(ctx):
                             f'[NETWORK HASH]   {hashrate}\n'
                             f'[WALLET SYNC %]: {t_percent}\n```'
                             )
+            await msg.add_reaction(EMOJI_OK_BOX)
             return
     else:
-        await ctx.send('`Unavailable.`')
+        msg = await ctx.send(f'{ctx.author.mention} Daemon stats unavailable.')
+        await msg.add_reaction(EMOJI_OK_BOX)
         return
 
 
@@ -1489,7 +1527,7 @@ async def _tip(ctx, amount):
         pass
     # End Check if maintenance
 
-    user_from = store.sql_get_userwallet(str(ctx.message.author.id))
+    user_from = await store.sql_get_userwallet(str(ctx.message.author.id))
     notifyList = store.sql_get_tipnotify()
 
     try:
@@ -1597,7 +1635,7 @@ async def _tip(ctx, amount):
 
 # Multiple tip
 async def _tip_talker(ctx, amount, list_talker):
-    user_from = store.sql_get_userwallet(str(ctx.message.author.id))
+    user_from = await store.sql_get_userwallet(str(ctx.message.author.id))
     notifyList = store.sql_get_tipnotify()
 
     try:

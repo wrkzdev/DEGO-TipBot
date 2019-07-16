@@ -72,7 +72,7 @@ async def sql_register_user(userID):
             result = cur.fetchone()
             if result is None:
                 balance_address = await wallet.register()
-                if (balance_address is None):
+                if balance_address is None:
                    print('Internal error during call register wallet-api')
                    return
                 else:
@@ -129,7 +129,7 @@ async def sql_update_user(userID, user_wallet_address):
         conn.close()
 
 
-def sql_get_userwallet(userID):
+async def sql_get_userwallet(userID):
     try:
         openConnection()
         with conn.cursor() as cur:
