@@ -3,6 +3,7 @@ from datetime import datetime
 import time
 import json
 
+import traceback
 import sys
 # Encrypt
 from cryptography.fernet import Fernet
@@ -41,7 +42,7 @@ async def sql_update_balances():
                 cur.execute(sql, (details['address'], details['unlocked'], details['locked'], int(time.time()), details['unlocked'], details['locked'], int(time.time()),))
                 conn.commit()
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -58,7 +59,7 @@ async def sql_update_some_balances(wallet_addresses: List[str]):
                 cur.execute(sql, (details['address'], details['unlocked'], details['locked'], int(time.time()), details['unlocked'], details['locked'], int(time.time()),))
                 conn.commit()
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -98,7 +99,7 @@ async def sql_register_user(userID):
                     result2['user_wallet_address'] = result[2]
                 return result2
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -124,7 +125,7 @@ async def sql_update_user(userID, user_wallet_address):
                 result2['user_wallet_address'] = user_wallet_address
                 return result2
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -163,7 +164,7 @@ async def sql_get_userwallet(userID):
                     userwallet['locked_balance'] = 0
                 return userwallet
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -182,7 +183,7 @@ def sql_get_countLastTx(userID, lastDuration: int):
             else:
                 return len(result)
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -200,7 +201,7 @@ def sql_mv_tx_single(user_from: str, user_name: str, to_user: str, server_id: st
             conn.commit()
         return True
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
     return False
@@ -225,7 +226,7 @@ def sql_mv_tx_multiple(user_from: str, user_name: str, user_tos, server_id: str,
             conn.commit()
         return True
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
     return False
@@ -291,12 +292,11 @@ def sql_adjust_balance(userID: str):
             balance['TxExpense'] = TxExpense or 0
             balance['TxWithdraw'] = TxWithdraw or 0
             balance['IntFeeExpense'] = IntFeeExpense or 0
-            print(balance)
             balance['Adjust'] = int(balance['DepositWallet'] + balance['Income'] - balance['Expense'] - balance['TxExpense'] - balance['TxWithdraw'] - balance['IntFeeExpense'])
-            print(balance['Adjust'])
+
             return balance
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
     return False
@@ -317,7 +317,7 @@ async def sql_send_tip_Ex(user_from: str, address_to: str, amount: int, txtype: 
                    cur.execute(sql, (user_from, amount, config.tx_fee, address_to, txtype.upper(), int(time.time()), tx_hash,))
                    conn.commit()
             except Exception as e:
-                print(e)
+                traceback.print_exc(file=sys.stdout)
             finally:
                 conn.close()
             return tx_hash
@@ -342,7 +342,7 @@ async def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, payme
                    cur.execute(sql, (user_from, amount, config.tx_fee, address_to, paymentid, txtype.upper(), int(time.time()), tx_hash,))
                    conn.commit()
             except Exception as e:
-                print(e)
+                traceback.print_exc(file=sys.stdout)
             finally:
                 conn.close()
             return tx_hash
@@ -380,7 +380,7 @@ def sql_tag_by_server(server_id: str, tag_id: str=None):
                     conn.commit()
                     return tag
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -408,7 +408,7 @@ def sql_tag_by_server_add(server_id: str, tag_id: str, tag_desc: str, added_byna
             else:
                 return None
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -429,7 +429,7 @@ def sql_tag_by_server_del(server_id: str, tag_id: str):
                 conn.commit()
                 return tag_id.upper()
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -448,7 +448,7 @@ def sql_add_messages(list_messages):
             conn.commit()
             return cur.rowcount
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -470,7 +470,7 @@ def sql_get_messages(server_id: str, channel_id: str, time_int: int):
                         list_talker.append(int(item[0]))
             return list_talker
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
     return None
@@ -489,7 +489,7 @@ def sql_get_tipnotify():
                 ignorelist.append(row[0])
             return ignorelist
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     finally:
         conn.close()
 
@@ -507,7 +507,7 @@ def sql_toggle_tipnotify(user_id: str, onoff: str):
                 cur.execute(sql, (user_id, int(time.time())))
                 conn.commit()
         except Exception as e:
-            print(e)
+            traceback.print_exc(file=sys.stdout)
         finally:
             conn.close()
     elif onoff == "ON":
@@ -518,7 +518,7 @@ def sql_toggle_tipnotify(user_id: str, onoff: str):
                 cur.execute(sql, str(user_id))
                 conn.commit()
         except Exception as e:
-            print(e)
+            traceback.print_exc(file=sys.stdout)
         finally:
             conn.close()
 

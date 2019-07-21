@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot, AutoShardedBot
 from discord.utils import get
 
+import traceback
 import sys
 sys.path.append("..")
 import store, daemonrpc_client, addressvalidation
@@ -54,6 +55,7 @@ EMOJI_OK_BOX = "\U0001F197"
 
 NOTIFICATION_OFF_CMD = 'Type: `.notifytip off` to turn off this DM notification.'
 
+bot_help_about = "About DEGO TipBot"
 bot_description = f"Tip {COIN_REPR} to other users on your server."
 bot_help_register = "Register or change your deposit address."
 bot_help_info = "Get your account's info."
@@ -69,6 +71,14 @@ bot_help_paymentid = "Make a random payment ID with 64 chars length."
 bot_help_stats = f"Show summary {COIN_REPR}: height, difficulty, etc."
 bot_help_tag = "Display a description or a link about what it is. (-add|-del) requires permission `manage_channels`"
 bot_help_notifytip = "Toggle notify tip notification from bot ON|OFF"
+
+# admin commands
+bot_help_admin = "Various admin commands."
+bot_help_admin_save = "Save wallet file..."
+bot_help_admin_shutdown = "Restart bot."
+bot_help_admin_baluser = "Check a specific user's balance for verification purpose."
+bot_help_admin_lockuser = "Lock a user from any tx (tip, withdraw, info, etc) by user id"
+bot_help_admin_unlockuser = "Unlock a user by user id."
 
 bot = AutoShardedBot(command_prefix='.', case_insensitive=True, owner_id = OWNER_ID_TIPBOT, dm_help = True, dm_help_threshold = 100)
 
@@ -143,6 +153,22 @@ async def on_message(message):
     await bot.invoke(ctx)
 
 
+@bot.command(pass_context=True, name='about', help=bot_help_about, hidden = True)
+async def about(ctx):
+    botdetails = discord.Embed(title='About Me', description='', colour=7047495)
+    botdetails.add_field(name='Creator\'s Discord Name:', value='CapEtn#4425', inline=True)
+    botdetails.add_field(name='My Github:', value='https://github.com/wrkzdev/DEGO-TipBot', inline=True)
+    botdetails.add_field(name='Servers I am in:', value=len(bot.guilds), inline=True)
+    botdetails.add_field(name='Support Me:', value=f'<@{bot.user.id}> donate AMOUNT', inline=True)
+    botdetails.set_footer(text='Made in Python3.6+ with discord.py library!', icon_url='http://findicons.com/files/icons/2804/plex/512/python.png')
+    botdetails.set_author(name=bot.user.name, icon_url=bot.user.avatar_url)
+    try:
+        await ctx.send(embed=botdetails)
+    except Exception as e:
+        await ctx.message.author.send(embed=botdetails)
+        print(e)
+
+
 @bot.group(hidden = True)
 @commands.is_owner()
 async def admin(ctx):
@@ -160,7 +186,7 @@ async def save(ctx):
     try:
         duration_hotwallet = await rpc_wallet_hotwallet_save()
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     if duration_hotwallet:
         await ctx.send(f'`save` hot wallet took {round(duration_hotwallet,3)}s.')
     else:
@@ -169,7 +195,7 @@ async def save(ctx):
     try:
         duration_wallet = await rpc_wallet_save()
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
 
     if duration_wallet:
         await ctx.send(f'`save` took {round(duration_wallet,3)}s.')
@@ -185,6 +211,34 @@ async def shutdown(ctx):
     await ctx.send(f'{EMOJI_REFRESH} {ctx.author.mention} .. restarting .. back soon.')
     await botLogChan.send(f'{EMOJI_REFRESH} {ctx.message.author.name} / {ctx.message.author.id} called `restart`. I will be back soon hopefully.')
     await bot.logout()
+
+
+@commands.is_owner()
+@admin.command(help=bot_help_admin_baluser)
+async def baluser(ctx, user_id: str, create_wallet: str = None):
+    wallet = await store.sql_get_userwallet(user_id)
+    if wallet is None:
+        userreg = await store.sql_register_user(user_id)
+        wallet = await store.sql_get_userwallet(user_id)
+
+    userdata_balance = store.sql_adjust_balance(user_id)
+    if 'lastUpdate' in wallet:
+        await ctx.message.add_reaction(EMOJI_TICK)
+        try:
+            update = datetime.fromtimestamp(int(wallet['lastUpdate'])).strftime('%Y-%m-%d %H:%M:%S')
+            ago = timeago.format(update, datetime.now())
+        except:
+            pass
+    balance_actual = '{:,.2f}'.format((wallet['actual_balance']+int(userdata_balance['Adjust'])) / COIN_DIGITS)
+    balance_locked = '{:,.2f}'.format(wallet['locked_balance'] / COIN_DIGITS)
+    await ctx.message.author.send('**[{user_id} BALANCE]**\n\n'
+        f'{EMOJI_MONEYBAG} Available: {balance_actual} '
+        f'{COIN_REPR}\n'
+        f'{EMOJI_HOURGLASS} Pending: {balance_locked} '
+        f'{COIN_REPR}\n')
+    if ago:
+        await ctx.message.author.send(f'{EMOJI_HOURGLASS} Last update: {ago}')
+
 
 
 @bot.command(pass_context=True, name='info', aliases=['wallet', 'tipjar'], help=bot_help_info)
@@ -275,7 +329,6 @@ async def balance(ctx):
         try:
             update = datetime.fromtimestamp(int(wallet['lastUpdate'])).strftime('%Y-%m-%d %H:%M:%S')
             ago = timeago.format(update, datetime.now())
-            print(ago)
         except:
             pass
     balance_actual = '{:,.2f}'.format((wallet['actual_balance']+int(userdata_balance['Adjust'])) / COIN_DIGITS)
@@ -529,7 +582,7 @@ async def withdraw(ctx, amount: str):
     try:
         withdraw = await store.sql_send_tip_Ex(str(ctx.message.author.id), user['user_wallet_address'], real_amount, "WITHDRAW")
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     if withdraw:
         await store.sql_update_some_balances([user['balance_wallet_address']])
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
@@ -605,7 +658,7 @@ async def donate(ctx, amount: str):
         else:
             tip = store.sql_mv_tx_single(str(ctx.message.author.id), str(ctx.message.author.name), "DONATE", str(ctx.guild.id),  str(ctx.guild.name), str(ctx.message.id), real_amount, "DONATE")
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     if tip:
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         await botLogChan.send(f'A user has donated amount `{real_amount / COIN_DIGITS:,.2f} {COIN_REPR}`.')
@@ -697,7 +750,7 @@ async def tip(ctx, amount: str, *args):
                     mult = {'y': 12*30*24*60*60, 'mon': 30*24*60*60, 'w': 7*24*60*60, 'd': 24*60*60, 'h': 60*60, 'mn': 60}
                     time_second = sum(int(num) * mult.get(val, 1) for num, val in re.findall('(\d+)(\w+)', time_string))
                 except Exception as e:
-                    print(e)
+                    traceback.print_exc(file=sys.stdout)
                     await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Invalid time given. Please use this example: `.tip 1,000 last 5h 12mn`')
                     return
                 try:
@@ -778,7 +831,7 @@ async def tip(ctx, amount: str, *args):
         # sql_mv_tx_single(user_from: str, user_name: str, to_user: str, server_id: str, servername: str, messageid: str, amount: int, tiptype: str)
         tip = store.sql_mv_tx_single(str(ctx.message.author.id), str(ctx.message.author.name), str(member.id), str(ctx.guild.id),  str(ctx.guild.name), str(ctx.message.id), real_amount, "TIP")
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     if tip:
         tipAmount = '{:,.2f}'.format(real_amount / COIN_DIGITS)
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
@@ -793,7 +846,7 @@ async def tip(ctx, amount: str, *args):
                 # add user to notifyList
                 print('Adding: ' + str(ctx.message.author.id) + ' not to receive DM tip')
                 store.sql_toggle_tipnotify(str(ctx.message.author.id), "OFF")
-                print(e)
+                traceback.print_exc(file=sys.stdout)
         if str(member.id) not in notifyList:
             try:
                 await member.send(
@@ -805,7 +858,7 @@ async def tip(ctx, amount: str, *args):
                 # add user to notifyList
                 print('Adding: ' + str(member.id) + ' not to receive DM tip')
                 store.sql_toggle_tipnotify(str(member.id), "OFF")
-                print(e)
+                traceback.print_exc(file=sys.stdout)
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
@@ -897,7 +950,7 @@ async def tipall(ctx, amount: str):
         # sql_mv_tx_multiple(user_from: str, user_name: str, user_tos, server_id: str, servername: str, messageid: str, amount_each: int, tiptype: str)
         tips = store.sql_mv_tx_multiple(str(ctx.message.author.id), str(ctx.message.author.name), memids, str(ctx.guild.id), str(ctx.guild.name), str(ctx.message.id), amountDiv, "TIPALL")
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     if tips:
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         TotalSpend = '{:,.2f}'.format(real_amount / COIN_DIGITS)
@@ -917,7 +970,7 @@ async def tipall(ctx, amount: str):
                 # add user to notifyList
                 print('Adding: ' + str(ctx.message.author.id) + ' not to receive DM tip')
                 store.sql_toggle_tipnotify(str(ctx.message.author.id), "OFF")
-                print(e)
+                traceback.print_exc(file=sys.stdout)
         numMsg = 0
         for member in listMembers:
             if ctx.message.author.id != member.id:
@@ -935,7 +988,7 @@ async def tipall(ctx, amount: str):
                                 # add user to notifyList
                                 print('Adding: ' + str(member.id) + ' not to receive DM tip')
                                 store.sql_toggle_tipnotify(str(member.id), "OFF")
-                                print(e)
+                                traceback.print_exc(file=sys.stdout)
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
@@ -1125,7 +1178,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         try:
             tip = await store.sql_send_tip_Ex_id(str(ctx.message.author.id), CoinAddress, real_amount, paymentid, "SEND")
         except Exception as e:
-            print(e) 
+            traceback.print_exc(file=sys.stdout) 
         if tip:
             await store.sql_update_some_balances([user_from['balance_wallet_address']])
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
@@ -1148,7 +1201,7 @@ async def send(ctx, amount: str, CoinAddress: str):
         try:
             tip = await store.sql_send_tip_Ex(str(ctx.message.author.id), CoinAddress, real_amount, "SEND")
         except Exception as e:
-            print(e)        
+            traceback.print_exc(file=sys.stdout)        
         if tip:
             await store.sql_update_some_balances([user_from['balance_wallet_address']])
             await ctx.message.add_reaction(EMOJI_MONEYBAG)
@@ -1596,7 +1649,7 @@ async def _tip(ctx, amount):
         # sql_mv_tx_multiple(user_from: str, user_name: str, user_tos, server_id: str, servername: str, messageid: str, amount_each: int, tiptype: str)
         tips = store.sql_mv_tx_multiple(str(ctx.message.author.id), str(ctx.message.author.name), memids, str(ctx.guild.id), str(ctx.guild.name), str(ctx.message.id), int(real_amount), "TIPS")
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     if tips:
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         if str(ctx.message.author.id) not in notifyList:
@@ -1611,7 +1664,7 @@ async def _tip(ctx, amount):
             except Exception as e:
                 print('Adding: ' + str(ctx.message.author.id) + ' not to receive DM tip')
                 store.sql_toggle_tipnotify(str(ctx.message.author.id), "OFF")
-                print(e)
+                traceback.print_exc(file=sys.stdout)
         for member in ctx.message.mentions:
             if ctx.message.author.id != member.id:
                 if member.bot == False:
@@ -1625,7 +1678,7 @@ async def _tip(ctx, amount):
                         except Exception as e:
                             print('Adding: ' + str(member.id) + ' not to receive DM tip')
                             store.sql_toggle_tipnotify(str(member.id), "OFF")
-                            print(e)
+                            traceback.print_exc(file=sys.stdout)
         return
     else:
         await ctx.message.add_reaction(EMOJI_ERROR)
@@ -1703,7 +1756,7 @@ async def _tip_talker(ctx, amount, list_talker):
         # sql_mv_tx_multiple(user_from: str, user_name: str, user_tos, server_id: str, servername: str, messageid: str, amount_each: int, tiptype: str)
         tips = store.sql_mv_tx_multiple(str(ctx.message.author.id), str(ctx.message.author.name), memids, str(ctx.guild.id), str(ctx.guild.name), str(ctx.message.id), int(real_amount), "TIPS")
     except Exception as e:
-        print(e)
+        traceback.print_exc(file=sys.stdout)
     if tips:
         await ctx.message.add_reaction(EMOJI_MONEYBAG)
         await ctx.message.add_reaction(EMOJI_SPEAK)
@@ -1719,7 +1772,7 @@ async def _tip_talker(ctx, amount, list_talker):
             except Exception as e:
                 print('Adding: ' + str(ctx.message.author.id) + ' not to receive DM tip')
                 store.sql_toggle_tipnotify(str(ctx.message.author.id), "OFF")
-                print(e)
+                traceback.print_exc(file=sys.stdout)
         mention_list_name = ''
         for member_id in list_talker:
             if ctx.message.author.id != int(member_id):
@@ -1736,7 +1789,7 @@ async def _tip_talker(ctx, amount, list_talker):
                         except Exception as e:
                             print('Adding: ' + str(member.id) + ' not to receive DM tip')
                             store.sql_toggle_tipnotify(str(member.id), "OFF")
-                            print(e)
+                            traceback.print_exc(file=sys.stdout)
         await ctx.send(f'{mention_list_name}\n\nYou got tip :) for active talking in `{ctx.guild.name}` {ctx.channel.mention}:)')
         return
     else:
