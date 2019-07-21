@@ -52,8 +52,10 @@ EMOJI_STOPSIGN = "\U0001F6D1"
 EMOJI_PURSE = "\U0001F45B"
 EMOJI_HOURGLASS = "\u231B"
 EMOJI_OK_BOX = "\U0001F197"
+EMOJI_LOCKED = "\U0001F512"
 
 NOTIFICATION_OFF_CMD = 'Type: `.notifytip off` to turn off this DM notification.'
+MSG_LOCKED_ACCOUNT = "Your account is locked. Please contact CapEtn#4425 in WrkzCoin discord. Check `.about` for more info."
 
 bot_help_about = "About DEGO TipBot"
 bot_description = f"Tip {COIN_REPR} to other users on your server."
@@ -239,6 +241,40 @@ async def baluser(ctx, user_id: str, create_wallet: str = None):
     if ago:
         await ctx.message.author.send(f'{EMOJI_HOURGLASS} Last update: {ago}')
 
+
+@commands.is_owner()
+@admin.command(help=bot_help_admin_lockuser)
+async def lockuser(ctx, user_id: str, *, reason: str):
+    get_discord_userinfo = store.sql_discord_userinfo_get(user_id)
+    if get_discord_userinfo is None:
+        store.sql_userinfo_locked(user_id, 'YES', reason, str(ctx.message.author.id))
+        await ctx.message.add_reaction(EMOJI_OK_HAND)
+        await ctx.message.author.send(f'{user_id} is locked.')
+        return
+    else:
+        if get_discord_userinfo['locked'].upper() == "YES":
+            await ctx.message.author.send(f'{user_id} was already locked.')
+        else:
+            store.sql_userinfo_locked(user_id, 'YES', reason, str(ctx.message.author.id))
+            await ctx.message.add_reaction(EMOJI_OK_HAND)
+            await ctx.message.author.send(f'Turn {user_id} to locked.')
+        return
+
+
+@commands.is_owner()
+@admin.command(help=bot_help_admin_unlockuser)
+async def unlockuser(ctx, user_id: str):
+    get_discord_userinfo = store.sql_discord_userinfo_get(user_id)
+    if get_discord_userinfo:
+        if get_discord_userinfo['locked'].upper() == "NO":
+            await ctx.message.author.send(f'**{user_id}** was already unlocked. Nothing to do.')
+        else:
+            store.sql_change_userinfo_single(user_id, 'locked', 'NO')
+            await ctx.message.author.send(f'Unlocked {user_id} done.')
+        return      
+    else:
+        await ctx.message.author.send(f'{user_id} not stored in **discord userinfo** yet. Nothing to unlocked.')
+        return
 
 
 @bot.command(pass_context=True, name='info', aliases=['wallet', 'tipjar'], help=bot_help_info)
@@ -472,6 +508,14 @@ async def register(ctx, wallet_address: str):
 
 @bot.command(pass_context=True, help=bot_help_withdraw)
 async def withdraw(ctx, amount: str):
+    # check if account locked
+    # account_lock = await alert_if_userlock(ctx, 'withdraw')
+    # if account_lock:
+        # await ctx.message.add_reaction(EMOJI_LOCKED) 
+        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        # return
+    # end of check if account locked
+
     # Check if maintenance
     if IS_MAINTENANCE == 1:
         if int(ctx.message.author.id) in MAINTENANCE_OWNER:
@@ -601,6 +645,14 @@ async def withdraw(ctx, amount: str):
 
 @bot.command(pass_context=True, help=bot_help_donate)
 async def donate(ctx, amount: str):
+    # check if account locked
+    # account_lock = await alert_if_userlock(ctx, 'donate')
+    # if account_lock:
+        # await ctx.message.add_reaction(EMOJI_LOCKED) 
+        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        # return
+    # end of check if account locked
+
     # Check if maintenance
     if IS_MAINTENANCE == 1:
         if int(ctx.message.author.id) in MAINTENANCE_OWNER:
@@ -704,6 +756,14 @@ async def notifytip(ctx, onoff: str):
 
 @bot.command(pass_context=True, help=bot_help_tip)
 async def tip(ctx, amount: str, *args):
+    # check if account locked
+    # account_lock = await alert_if_userlock(ctx, 'tip')
+    # if account_lock:
+        # await ctx.message.add_reaction(EMOJI_LOCKED) 
+        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        # return
+    # end of check if account locked
+
     # Check if maintenance
     if IS_MAINTENANCE == 1:
         if int(ctx.message.author.id) in MAINTENANCE_OWNER:
@@ -775,10 +835,10 @@ async def tip(ctx, amount: str, *args):
                             await _tip_talker(ctx, amount, message_talker)
                             return
             else:
-                await ctx.send(f'{EMOJI_RED_NO} {ctx.author.mention} You need at least one person to tip to.')
+                await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} You need at least one person to tip to.')
                 return
         else:
-            await ctx.send(f'{EMOJI_RED_NO} {ctx.author.mention} You need at least one person to tip to.')
+            await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} You need at least one person to tip to.')
             return
     elif len(ctx.message.mentions) > 1:
         await _tip(ctx, amount)
@@ -787,6 +847,9 @@ async def tip(ctx, amount: str, *args):
         member = ctx.message.mentions[0]
 
     user_from = await store.sql_get_userwallet(str(ctx.message.author.id))
+    if user_from is None:
+        userreg = await store.sql_register_user(str(ctx.message.author.id))
+        user_from = await store.sql_get_userwallet(str(ctx.message.author.id))
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
     user_to = await store.sql_get_userwallet(str(member.id))
     if user_to is None:
@@ -868,6 +931,14 @@ async def tip(ctx, amount: str, *args):
 
 @bot.command(pass_context=True, help=bot_help_tipall)
 async def tipall(ctx, amount: str):
+    # check if account locked
+    # account_lock = await alert_if_userlock(ctx, 'tipall')
+    # if account_lock:
+        # await ctx.message.add_reaction(EMOJI_LOCKED) 
+        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        # return
+    # end of check if account locked
+
     # Check if maintenance
     if IS_MAINTENANCE == 1:
         if int(ctx.message.author.id) in MAINTENANCE_OWNER:
@@ -998,6 +1069,14 @@ async def tipall(ctx, amount: str):
 
 @bot.command(pass_context=True, help=bot_help_send)
 async def send(ctx, amount: str, CoinAddress: str):
+    # check if account locked
+    # account_lock = await alert_if_userlock(ctx, 'send')
+    # if account_lock:
+        # await ctx.message.add_reaction(EMOJI_LOCKED) 
+        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        # return
+    # end of check if account locked
+
     # Check if maintenance
     if IS_MAINTENANCE == 1:
         if int(ctx.message.author.id) in MAINTENANCE_OWNER:
@@ -1796,6 +1875,23 @@ async def _tip_talker(ctx, amount, list_talker):
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Can not deliver Tip right now. Try again soon.')
         return
+
+
+async def alert_if_userlock(ctx, cmd: str):
+    botLogChan = bot.get_channel(id=LOG_CHAN)
+    get_discord_userinfo = None
+    try:
+        get_discord_userinfo = store.sql_discord_userinfo_get(str(ctx.message.author.id))
+    except Exception as e:
+        print(e)
+    if get_discord_userinfo is None:
+        return None
+    else:
+        if get_discord_userinfo['locked'].upper() == "YES":
+            await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} locked but is commanding `{cmd}`')
+            return True
+        else:
+            return None
 
 
 def truncate(number, digits) -> float:

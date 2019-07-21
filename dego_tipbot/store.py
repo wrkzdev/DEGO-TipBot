@@ -14,17 +14,28 @@ from config import config
 import asyncio
 
 # MySQL
-import pymysql
-conn = None
+import pymysql, pymysqlpool
+import pymysql.cursors
+
+pymysqlpool.logger.setLevel('DEBUG')
+myconfig = {
+    'host': config.mysql.host,
+    'user':config.mysql.user,
+    'password':config.mysql.password,
+    'database':config.mysql.db,
+    'cursorclass': pymysql.cursors.DictCursor,
+    'autocommit':True
+    }
+
+connPool = pymysqlpool.ConnectionPool(size=5, name='connPool', **myconfig)
+conn = connPool.get_connection(timeout=5, retry_num=2)
 
 # OpenConnection
 def openConnection():
-    global conn
+    global conn, connPool
     try:
-        if(conn is None):
-            conn = pymysql.connect(config.mysql.host, user=config.mysql.user, passwd=config.mysql.password, db=config.mysql.db, connect_timeout=5)
-        elif (not conn.open):
-            conn = pymysql.connect(config.mysql.host, user=config.mysql.user, passwd=config.mysql.password, db=config.mysql.db, connect_timeout=5)
+        if conn is None:
+            conn = connPool.get_connection(timeout=5, retry_num=2)
     except:
         print("ERROR: Unexpected error: Could not connect to MySql instance.")
         sys.exit()
@@ -43,8 +54,6 @@ async def sql_update_balances():
                 conn.commit()
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 async def sql_update_some_balances(wallet_addresses: List[str]):
@@ -60,8 +69,6 @@ async def sql_update_some_balances(wallet_addresses: List[str]):
                 conn.commit()
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 async def sql_register_user(userID):
@@ -87,21 +94,11 @@ async def sql_register_user(userID):
                              VALUES (%s, %s, %s, %s, %s) """
                    cur.execute(sql, (str(userID), balance_address['address'], int(time.time()), chainHeight, encrypt_string(balance_address['privateSpendKey']), ))
                    conn.commit()
-                   result2 = {}
-                   result2['balance_wallet_address'] = balance_address
-                   result2['user_wallet_address'] = ''
-                   return result2
+                   return True
             else:
-                result2 = {}
-                result2['user_id'] = result[0]
-                result2['balance_wallet_address'] = result[1]
-                if 2 in result:
-                    result2['user_wallet_address'] = result[2]
-                return result2
+                return result
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 async def sql_update_user(userID, user_wallet_address):
@@ -120,14 +117,11 @@ async def sql_update_user(userID, user_wallet_address):
                 sql = """ UPDATE dego_user SET user_wallet_address=%s WHERE user_id=%s """
                 cur.execute(sql, (user_wallet_address, str(userID),))
                 conn.commit()
-                result2 = {}
-                result2['balance_wallet_address'] = result[2]
+                result2 = result
                 result2['user_wallet_address'] = user_wallet_address
                 return result2
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 async def sql_get_userwallet(userID):
@@ -141,32 +135,21 @@ async def sql_get_userwallet(userID):
             if result is None:
                 return None
             else:
-                userwallet = {}
-                userwallet['balance_wallet_address'] = result[1]
-                if result[2]:
-                    userwallet['user_wallet_address'] = result[2]
-                if result[3]:
-                    userwallet['balance_wallet_address_ts'] = result[3]
-                if result[4]:
-                    userwallet['balance_wallet_address_ch'] = result[4]
-                if result[5]:
-                    userwallet['lastOptimize'] = result[5]
+                userwallet = result
                 sql = """ SELECT balance_wallet_address, actual_balance, locked_balance, lastUpdate FROM dego_walletapi 
                           WHERE `balance_wallet_address`=%s LIMIT 1 """
                 cur.execute(sql, (userwallet['balance_wallet_address'],))
-                result2 = cur.fetchone()
-                if result2:
-                    userwallet['actual_balance'] = int(result2[1])
-                    userwallet['locked_balance'] = int(result2[2])
-                    userwallet['lastUpdate'] = int(result2[3])
+                result = cur.fetchone()
+                if result:
+                    userwallet['actual_balance'] = int(result['actual_balance'])
+                    userwallet['locked_balance'] = int(result['locked_balance'])
+                    userwallet['lastUpdate'] = int(result['lastUpdate'])
                 else:
                     userwallet['actual_balance'] = 0
                     userwallet['locked_balance'] = 0
                 return userwallet
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 def sql_get_countLastTx(userID, lastDuration: int):
@@ -184,8 +167,6 @@ def sql_get_countLastTx(userID, lastDuration: int):
                 return len(result)
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 def sql_mv_tx_single(user_from: str, user_name: str, to_user: str, server_id: str, servername: str, messageid: str, amount: int, tiptype: str):
@@ -202,8 +183,6 @@ def sql_mv_tx_single(user_from: str, user_name: str, to_user: str, server_id: st
         return True
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
     return False
 
 
@@ -227,8 +206,6 @@ def sql_mv_tx_multiple(user_from: str, user_name: str, user_tos, server_id: str,
         return True
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
     return False
 
 
@@ -241,7 +218,7 @@ def sql_adjust_balance(userID: str):
             cur.execute(sql, userID)
             result = cur.fetchone()
             if result:
-                Expense = result[0]
+                Expense = result['Expense']
             else:
                 Expense = 0
 
@@ -249,7 +226,7 @@ def sql_adjust_balance(userID: str):
             cur.execute(sql, userID)
             result = cur.fetchone()
             if result:
-                Income = result[0]
+                Income = result['Income']
             else:
                 Income = 0
 
@@ -257,7 +234,7 @@ def sql_adjust_balance(userID: str):
             cur.execute(sql, userID)
             result = cur.fetchone()
             if result:
-                DepositWallet = result[0]
+                DepositWallet = result['DepositWallet']
             else:
                 DepositWallet = 0
 
@@ -265,7 +242,7 @@ def sql_adjust_balance(userID: str):
             cur.execute(sql, userID)
             result = cur.fetchone()
             if result:
-                TxExpense = result[0]
+                TxExpense = result['TxExpense']
             else:
                 TxExpense = 0
 
@@ -273,7 +250,7 @@ def sql_adjust_balance(userID: str):
             cur.execute(sql, userID)
             result = cur.fetchone()
             if result:
-                TxWithdraw = result[0]
+                TxWithdraw = result['TxWithdraw']
             else:
                 TxWithdraw = 0
 
@@ -281,7 +258,7 @@ def sql_adjust_balance(userID: str):
             cur.execute(sql, userID)
             result = cur.fetchone()
             if result:
-                IntFeeExpense = result[0]
+                IntFeeExpense = result['IntFeeExpense']
             else:
                 IntFeeExpense = 0
 
@@ -297,8 +274,6 @@ def sql_adjust_balance(userID: str):
             return balance
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
     return False
 
 
@@ -318,8 +293,6 @@ async def sql_send_tip_Ex(user_from: str, address_to: str, amount: int, txtype: 
                    conn.commit()
             except Exception as e:
                 traceback.print_exc(file=sys.stdout)
-            finally:
-                conn.close()
             return tx_hash
     else:
         return None
@@ -343,8 +316,6 @@ async def sql_send_tip_Ex_id(user_from: str, address_to: str, amount: int, payme
                    conn.commit()
             except Exception as e:
                 traceback.print_exc(file=sys.stdout)
-            finally:
-                conn.close()
             return tx_hash
     else:
         return None
@@ -367,33 +338,24 @@ def sql_tag_by_server(server_id: str, tag_id: str=None):
                 cur.execute(sql, (server_id, tag_id,))
                 result = cur.fetchone()
                 if result:
-                    tag = {}
-                    tag['tag_id'] = result[0]
-                    tag['tag_desc'] = result[1]
-                    tag['date_added'] = result[2]
-                    tag['tag_serverid'] = result[3]
-                    tag['added_byname'] = result[4]
-                    tag['added_byuid'] = result[5]
-                    tag['num_trigger'] = result[6]
+                    tag = result
                     sql = """ UPDATE dego_tag SET num_trigger=num_trigger+1 WHERE tag_serverid = %s AND tag_id=%s """
                     cur.execute(sql, (server_id, tag_id,))
                     conn.commit()
                     return tag
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 def sql_tag_by_server_add(server_id: str, tag_id: str, tag_desc: str, added_byname: str, added_byuid: str):
     try:
         openConnection()
         with conn.cursor() as cur:
-            sql = """ SELECT COUNT(tag_serverid) FROM dego_tag WHERE tag_serverid=%s """
+            sql = """ SELECT COUNT(tag_serverid) as Num_Tag FROM dego_tag WHERE tag_serverid=%s """
             cur.execute(sql, (server_id,))
             counting = cur.fetchone()
             if counting:
-                if counting[0] > 20:
+                if counting['Num_Tag'] > 20:
                     return None
             sql = """ SELECT `tag_id`, `tag_desc`, `date_added`, `tag_serverid`, `added_byname`, `added_byuid`, `num_trigger` 
                       FROM dego_tag WHERE tag_serverid = %s AND tag_id=%s """
@@ -409,8 +371,6 @@ def sql_tag_by_server_add(server_id: str, tag_id: str, tag_desc: str, added_byna
                 return None
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 def sql_tag_by_server_del(server_id: str, tag_id: str):
@@ -430,8 +390,6 @@ def sql_tag_by_server_del(server_id: str, tag_id: str):
                 return tag_id.upper()
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 def sql_add_messages(list_messages):
@@ -449,8 +407,6 @@ def sql_add_messages(list_messages):
             return cur.rowcount
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 def sql_get_messages(server_id: str, channel_id: str, time_int: int):
@@ -466,14 +422,11 @@ def sql_get_messages(server_id: str, channel_id: str, time_int: int):
             list_talker = []
             if result:
                 for item in result:
-                    if int(item[0]) not in list_talker:
-                        list_talker.append(int(item[0]))
+                    if int(item['user_id']) not in list_talker:
+                        list_talker.append(int(item['user_id']))
             return list_talker
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
-    return None
 
 
 def sql_get_tipnotify():
@@ -486,12 +439,10 @@ def sql_get_tipnotify():
             result = cur.fetchall()
             ignorelist = []
             for row in result:
-                ignorelist.append(row[0])
+                ignorelist.append(row['user_id'])
             return ignorelist
     except Exception as e:
         traceback.print_exc(file=sys.stdout)
-    finally:
-        conn.close()
 
 
 def sql_toggle_tipnotify(user_id: str, onoff: str):
@@ -508,8 +459,6 @@ def sql_toggle_tipnotify(user_id: str, onoff: str):
                 conn.commit()
         except Exception as e:
             traceback.print_exc(file=sys.stdout)
-        finally:
-            conn.close()
     elif onoff == "ON":
         try:
             openConnection()
@@ -519,8 +468,72 @@ def sql_toggle_tipnotify(user_id: str, onoff: str):
                 conn.commit()
         except Exception as e:
             traceback.print_exc(file=sys.stdout)
-        finally:
-            conn.close()
+
+
+def sql_change_userinfo_single(user_id: str, what: str, value: str):
+    global conn
+    try:
+        openConnection()
+        with conn.cursor() as cur:
+            # select first
+            sql = """ SELECT `user_id` FROM discord_userinfo 
+                      WHERE `user_id` = %s """
+            cur.execute(sql, (user_id,))
+            result = cur.fetchone()
+            if result:
+                sql = """ UPDATE discord_userinfo SET `""" + what.lower() + """` = %s WHERE `user_id` = %s """
+                cur.execute(sql, (value, user_id))
+                conn.commit()
+            else:
+                sql = """ INSERT INTO `discord_userinfo` (`user_id`, `""" + what.lower() + """`)
+                      VALUES (%s, %s) """
+                cur.execute(sql, (user_id, value))
+                conn.commit()
+    except Exception as e:
+        traceback.print_exc(file=sys.stdout)
+
+
+def sql_discord_userinfo_get(user_id: str):
+    global conn
+    try:
+        openConnection()
+        with conn.cursor() as cur:
+            # select first
+            sql = """ SELECT * FROM discord_userinfo 
+                      WHERE `user_id` = %s """
+            cur.execute(sql, (user_id,))
+            result = cur.fetchone()
+            return result
+    except Exception as e:
+        traceback.print_exc(file=sys.stdout)
+    return None
+
+
+def sql_userinfo_locked(user_id: str, locked: str, locked_reason: str, locked_by: str):
+    global conn
+    if locked.upper() not in ["YES", "NO"]:
+        return
+    try:
+        openConnection()
+        with conn.cursor() as cur:
+            # select first
+            sql = """ SELECT `user_id` FROM discord_userinfo 
+                      WHERE `user_id` = %s """
+            cur.execute(sql, (user_id,))
+            result = cur.fetchone()
+            if result is None:
+                sql = """ INSERT INTO `discord_userinfo` (`user_id`, `locked`, `locked_reason`, `locked_by`, `locked_date`)
+                      VALUES (%s, %s, %s, %s, %s) """
+                cur.execute(sql, (user_id, locked.upper(), locked_reason, locked_by, int(time.time())))
+                conn.commit()
+            else:
+                sql = """ UPDATE `discord_userinfo` SET `locked`= %s, `locked_reason` = %s, `locked_by` = %s, `locked_date` = %s
+                      WHERE `user_id` = %s """
+                cur.execute(sql, (locked.upper(), locked_reason, locked_by, int(time.time()), user_id))
+                conn.commit()
+            return True
+    except Exception as e:
+        traceback.print_exc(file=sys.stdout)
 
 
 # Steal from https://nitratine.net/blog/post/encryption-and-decryption-in-python/
