@@ -509,11 +509,11 @@ async def register(ctx, wallet_address: str):
 @bot.command(pass_context=True, help=bot_help_withdraw)
 async def withdraw(ctx, amount: str):
     # check if account locked
-    # account_lock = await alert_if_userlock(ctx, 'withdraw')
-    # if account_lock:
-        # await ctx.message.add_reaction(EMOJI_LOCKED) 
-        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
-        # return
+    account_lock = await alert_if_userlock(ctx, 'withdraw')
+    if account_lock:
+        await ctx.message.add_reaction(EMOJI_LOCKED) 
+        await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        return
     # end of check if account locked
 
     # Check if maintenance
@@ -646,11 +646,11 @@ async def withdraw(ctx, amount: str):
 @bot.command(pass_context=True, help=bot_help_donate)
 async def donate(ctx, amount: str):
     # check if account locked
-    # account_lock = await alert_if_userlock(ctx, 'donate')
-    # if account_lock:
-        # await ctx.message.add_reaction(EMOJI_LOCKED) 
-        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
-        # return
+    account_lock = await alert_if_userlock(ctx, 'donate')
+    if account_lock:
+        await ctx.message.add_reaction(EMOJI_LOCKED) 
+        await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        return
     # end of check if account locked
 
     # Check if maintenance
@@ -757,11 +757,11 @@ async def notifytip(ctx, onoff: str):
 @bot.command(pass_context=True, help=bot_help_tip)
 async def tip(ctx, amount: str, *args):
     # check if account locked
-    # account_lock = await alert_if_userlock(ctx, 'tip')
-    # if account_lock:
-        # await ctx.message.add_reaction(EMOJI_LOCKED) 
-        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
-        # return
+    account_lock = await alert_if_userlock(ctx, 'tip')
+    if account_lock:
+        await ctx.message.add_reaction(EMOJI_LOCKED) 
+        await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        return
     # end of check if account locked
 
     # Check if maintenance
@@ -932,11 +932,11 @@ async def tip(ctx, amount: str, *args):
 @bot.command(pass_context=True, help=bot_help_tipall)
 async def tipall(ctx, amount: str):
     # check if account locked
-    # account_lock = await alert_if_userlock(ctx, 'tipall')
-    # if account_lock:
-        # await ctx.message.add_reaction(EMOJI_LOCKED) 
-        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
-        # return
+    account_lock = await alert_if_userlock(ctx, 'tipall')
+    if account_lock:
+        await ctx.message.add_reaction(EMOJI_LOCKED) 
+        await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        return
     # end of check if account locked
 
     # Check if maintenance
@@ -1070,11 +1070,11 @@ async def tipall(ctx, amount: str):
 @bot.command(pass_context=True, help=bot_help_send)
 async def send(ctx, amount: str, CoinAddress: str):
     # check if account locked
-    # account_lock = await alert_if_userlock(ctx, 'send')
-    # if account_lock:
-        # await ctx.message.add_reaction(EMOJI_LOCKED) 
-        # await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
-        # return
+    account_lock = await alert_if_userlock(ctx, 'send')
+    if account_lock:
+        await ctx.message.add_reaction(EMOJI_LOCKED) 
+        await ctx.send(f'{EMOJI_STOPSIGN} {MSG_LOCKED_ACCOUNT}')
+        return
     # end of check if account locked
 
     # Check if maintenance
