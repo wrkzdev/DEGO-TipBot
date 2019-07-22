@@ -546,10 +546,10 @@ async def withdraw(ctx, amount: str):
     if floodTip >= config.floodTip:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Cool down your tip or TX. or increase your amount next time.')
-        await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} reached max. TX threshold. Currently halted: `.withdraw`')
+        await botLogChan.send('A user reached max. TX threshold. Currently halted: `.withdraw`')
         return
     elif floodTip >= config.floodTip - 2:
-        await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} nearly reached max. TX threshold. Currently doing: `.withdraw`')
+        await botLogChan.send('{A user nearly reached max. TX threshold. Currently doing: `.withdraw`')
         pass
     else:
         pass
@@ -1107,10 +1107,10 @@ async def send(ctx, amount: str, CoinAddress: str):
     if floodTip >= config.floodTip:
         await ctx.message.add_reaction(EMOJI_ERROR)
         await ctx.send(f'{EMOJI_STOPSIGN} {ctx.author.mention} Cool down your tip or TX. or increase your amount next time.')
-        await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} reached max. TX threshold. Currently halted: `.send`')
+        await botLogChan.send('A user reached max. TX threshold. Currently halted: `.send`')
         return
     elif floodTip >= config.floodTip - 2:
-        await botLogChan.send(f'{ctx.message.author.name} / {ctx.message.author.id} nearly reached max. TX threshold. Currently doing: `.send`')
+        await botLogChan.send('A user nearly reached max. TX threshold. Currently doing: `.send`')
         pass
     else:
         pass
