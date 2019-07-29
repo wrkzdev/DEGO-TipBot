@@ -196,12 +196,13 @@ def sql_mv_tx_multiple(user_from: str, user_name: str, user_tos, server_id: str,
     for item in user_tos:
         values_str.append(f"('{user_from}', '{user_name}', '{item}', '{server_id}', '{servername}', '{messageid}', {amount_each}, '{tiptype.upper()}', {currentTs})\n")
     values_sql = "VALUES " + ",".join(values_str)
+    print(values_sql)
     try:
         openConnection()
         with conn.cursor() as cur: 
             sql = """ INSERT INTO dego_mv_tx (`from_userid`, `from_name`, `to_userid`, `server_id`, `server_name`, `message_id`, `amount`, `type`, `date`) 
                       """+values_sql+""" """
-            cur.execute(sql,)
+            cur.execute(sql)
             conn.commit()
         return True
     except Exception as e:

@@ -1695,8 +1695,7 @@ async def _tip(ctx, amount):
     memids = []  # list of member ID
     for member in listMembers:
         if ctx.message.author.id != member.id:
-            if member.bot == False:
-                memids.append(str(member.id))
+            memids.append(str(member.id))
 
     ActualSpend = real_amount * len(memids)
     userdata_balance = store.sql_adjust_balance(str(ctx.message.author.id))
